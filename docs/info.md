@@ -78,14 +78,17 @@ reset the face draws on and shows 12:00 AM, 1 January.
 | `ui[0]` | Button A: Hour + in the time view, Month + in the date view; Colour + while `ui[2]` is high |
 | `ui[1]` | Button B: Minute + in the time view (also zeroes the seconds), Day + in the date view |
 | `ui[2]` | Button A steps the LED colour instead of the hour or month |
-| `ui[3]` | Grid off: the unlit segments are not drawn, only the lit ones and the watch body |
+| `ui[3]` | Grid on: high draws the unlit segments dimly; low shows only the lit ones and the watch body |
 | `ui[4]` | Show the date instead of the time |
 | `ui[6:5]` | Mode: 00 hard, 01 medium, 1x easy |
 | `ui[7]` | Fast: the clock runs 900 times faster, a minute every 4 frames |
 
 The two buttons set whatever is on screen. A press advances its field by
 one; holding a button repeats after half a second. Setting a field never
-carries into the next one. The inputs are sampled once per frame, which
+carries into the next one. **Both buttons together** put what is on screen
+back to its reset value: 12:00:00 AM in the time view, 1 January in the date
+view. Nothing else changes, so a host can set any time or date by clearing
+and then counting presses. The inputs are sampled once per frame, which
 debounces them.
 
 The LED colour steps through cyan (after reset), red, green, blue, magenta,

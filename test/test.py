@@ -17,7 +17,7 @@ FRAME = H_TOTAL * V_TOTAL
 
 # ui_in levels
 DATE, MEDIUM, EASY = 0b0001_0000, 0b0010_0000, 0b0100_0000
-SET_COLOUR, GRID_OFF = 0b0000_0100, 0b0000_1000
+SET_COLOUR, GRID = 0b0000_0100, 0b0000_1000
 BTN_A, BTN_B = 0b0000_0001, 0b0000_0010
 
 BLACK, GREY = (0, 0, 0), (1, 1, 1)
@@ -84,7 +84,7 @@ class Screen:
 async def start(dut):
     cocotb.start_soon(Clock(dut.clk, PERIOD_NS, unit="ns").start())
     dut.ena.value = 1
-    dut.ui_in.value = 0
+    dut.ui_in.value = GRID
     dut.uio_in.value = 0
     dut.rst_n.value = 0
     for _ in range(5):
@@ -130,11 +130,14 @@ async def test_face(dut):
     short = os.environ.get("GATES") == "yes" or cocotb.SIM_NAME.lower().startswith("icarus")
     scr = await start(dut)
 
+    def ui(levels, grid=GRID):
+        dut.ui_in.value = levels | grid
+
     async def press(buttons, held=0):
         """One press of the buttons in ui_in, the other inputs held."""
-        dut.ui_in.value = held | buttons
+        ui(held | buttons)
         await scr.skip(2)
-        dut.ui_in.value = held
+        ui(held)
         await scr.skip(2)
 
     # Frame 0: nothing is drawn on yet, only the body and the unlit web.
@@ -155,7 +158,7 @@ async def test_face(dut):
     assert CYAN not in (got["a"], got["o3"], got["o1"]), got
 
     # Medium joins them round the large hexagon.
-    dut.ui_in.value = MEDIUM
+    ui(MEDIUM)
     await scr.skip(2)
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
     assert got["a"] == CYAN and got["o1"] != CYAN, got
@@ -163,7 +166,7 @@ async def test_face(dut):
     # Easy adds the spoke at 1.  With SET_COLOUR, button A steps the colour
     # to red and leaves the hour alone.
     await press(BTN_A, EASY | SET_COLOUR)
-    dut.ui_in.value = EASY
+    ui(EASY)
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1, "o9": SPOKE_O9})
     assert got == {"a": RED, "o1": RED, "o9": RED}, got
 
@@ -183,7 +186,7 @@ async def test_face(dut):
     assert all(v == RED for v in got.values()), got
 
     # Date view: the face draws on again, then January (corner 1) and day 1.
-    dut.ui_in.value = DATE
+    ui(DATE)
     await scr.skip(3)
     assert await scr.web(SPOKE_O9)
     # Button B is the day here; four times meanwhile: the 5th, at the "05" corner.
@@ -201,16 +204,37 @@ async def test_face(dut):
     got = await scr.frame({"a": A_TOP, "o9": SPOKE_O9, "i9": SPOKE_I9})
     assert got["a"] == RED and got["o9"] != RED and got["i9"] == RED, got
 
-    # Grid off: the unlit segments go, the lit ones and the body stay.
+    # Grid input low: the unlit segments go, the lit ones and the body stay.
     assert await scr.web(A_BOTTOM)
-    dut.ui_in.value = DATE | GRID_OFF
+    ui(DATE, grid=0)
     await scr.skip(2)
     x, y = A_BOTTOM
     got = await scr.frame({"w0": (x, y), "w1": (x + 1, y), "a": A_TOP, "body": BODY})
     assert got == {"w0": BLACK, "w1": BLACK, "a": RED, "body": GREY}, got
 
     # Back in the time view the buttons did not move the clock: still 12:02 PM.
-    dut.ui_in.value = EASY
+    ui(EASY)
     await scr.skip(64)
     got = await scr.frame({"bar": BAR_TOP, "a": A_TOP, "b": B_TOP, "s2": STRIPE_2, "o3": SPOKE_O3})
     assert all(v == RED for v in got.values()), got
+
+    # Both buttons together: the time goes back to 12:00 AM.  The colour is
+    # still red.
+    await press(BTN_A | BTN_B, EASY)
+    got = await scr.frame({"bar": BAR_TOP, "a": A_TOP, "b": B_TOP, "s2": STRIPE_2, "o3": SPOKE_O3})
+    assert got["bar"] == BLACK and got["s2"] != RED, got
+    assert got["a"] == RED and got["b"] == RED and got["o3"] == RED, got
+
+    # That left the date alone: still 5 February.
+    ui(DATE)
+    await scr.skip(64)
+    got = await scr.frame({"a": A_TOP, "o9": SPOKE_O9, "i9": SPOKE_I9, "i5": SPOKE_I5})
+    assert got["a"] == RED and got["o9"] != RED, got
+    assert got["i9"] == RED and got["i5"] == RED, got
+
+    # Both buttons in the date view: 1 January.
+    await press(BTN_A | BTN_B, DATE)
+    got = await scr.frame({"a": A_TOP, "o9": SPOKE_O9, "o5": SPOKE_O5, "b": B_TOP, "s1": STRIPE_1,
+                           "i5": SPOKE_I5})
+    assert got["o9"] == RED and got["o5"] == RED and got["b"] == RED and got["s1"] == RED, got
+    assert RED not in (got["a"], got["i5"]), got

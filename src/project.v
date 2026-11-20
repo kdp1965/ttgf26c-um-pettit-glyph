@@ -58,14 +58,18 @@ module tt_um_pettit_glyph (
 
   wire [1:0] btn = ui_s[1:0];
   wire       set_colour = ui_s[2];
-  wire       grid_off = ui_s[3];
+  wire       grid_on = ui_s[3];
   wire       view_date = ui_s[4];
   wire [1:0] mode = ui_s[6:5];
   wire       fast = ui_s[7];
 
   // A held button repeats: after half a second, then 7.5 times a second.
   wire       rep = (hold == 5'd31);
-  wire [1:0] press = btn & (~btn_prev | {2{rep}});
+  // Both buttons together are not two presses: they put the time (or, in the
+  // date view, the date) back to its reset value, so a host can set any time
+  // by clearing and then counting presses.
+  wire       both = (btn == 2'b11);
+  wire [1:0] press = (btn & (~btn_prev | {2{rep}})) & {2{!both}};
 
   // The two buttons set what is on screen: hours and minutes in the time
   // view, month and day in the date view.  With set_colour high the first
@@ -89,7 +93,7 @@ module tt_um_pettit_glyph (
       if (press[0] && set_colour) colour <= colour + 3'd1;
       btn_prev <= btn;
       view_prev <= view_date;
-      hold <= (btn == 2'd0) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
+      hold <= (btn == 2'd0 || both) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
       fcnt <= fcnt + 2'd1;
       // Draw the face on, one segment every other frame, after reset and
       // whenever the view changes.
@@ -120,6 +124,8 @@ module tt_um_pettit_glyph (
       .btn_min   (btn_b && !view_date),
       .btn_mon   (btn_a && view_date),
       .btn_day   (btn_b && view_date),
+      .clr_time  (both && !view_date),
+      .clr_date  (both && view_date),
       .h12       (h12),
       .pm        (pm),
       .m5        (m5),
@@ -147,7 +153,7 @@ module tt_um_pettit_glyph (
       .singles(view_date ? d1 : m1),
       .mode   (mode),
       .reveal (reveal),
-      .web_on (!grid_off),
+      .web_on (grid_on),
       .colour (colour),
       .top_on (pm),
       .bot_on (sec0),

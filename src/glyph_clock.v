@@ -12,7 +12,9 @@
  * Everything advances on frame_tick.  Seconds come from a prescaler counting
  * qtick, which arrives four times per scan line (125875 per second with a
  * 25.175 MHz pixel clock).  A set button advances its own field only: it does
- * not carry into the next one.  February always has 28 days.
+ * not carry into the next one.  February always has 28 days.  clr_time and
+ * clr_date put the time (seconds included) or the date back to the reset
+ * value, 12:00:00 AM and 1 January, and win over everything else.
  */
 
 `default_nettype none
@@ -29,6 +31,8 @@ module glyph_clock #(
     input  wire       btn_min,
     input  wire       btn_mon,
     input  wire       btn_day,
+    input  wire       clr_time,    // with frame_tick: back to 12:00:00 AM
+    input  wire       clr_date,    // with frame_tick: back to 1 January
     output reg  [3:0] h12,
     output reg        pm,
     output reg  [3:0] m5,
@@ -49,6 +53,9 @@ module glyph_clock #(
 
   always @(posedge clk) begin
     if (!rst_n) begin
+      pre <= 17'd0;
+      sec_pend <= 1'b0;
+    end else if (frame_tick && clr_time) begin
       pre <= 17'd0;
       sec_pend <= 1'b0;
     end else begin
@@ -75,7 +82,7 @@ module glyph_clock #(
   wire day_last = ({d5, d1} == last);
   wire day_over = ({d5, d1} > last);
 
-  wire nat_min = (sec_pend && sec_wrap) || fast_tick;
+  wire nat_min = ((sec_pend && sec_wrap) || fast_tick) && !clr_time;
   wire nat_hour = nat_min && !btn_min && m1_wrap && m5_wrap;
   wire nat_day = nat_hour && !btn_hour && h_wrap && pm;
   wire nat_mon = nat_day && !btn_day && day_last;
@@ -120,6 +127,19 @@ module glyph_clock #(
       end
 
       if (nat_mon || btn_mon) mon <= (mon == 4'd11) ? 4'd0 : mon + 4'd1;
+
+      if (clr_time) begin
+        sec <= 6'd0;
+        m1  <= 3'd0;
+        m5  <= 4'd0;
+        h12 <= 4'd0;
+        pm  <= 1'b0;
+      end
+      if (clr_date) begin
+        d1  <= 3'd1;
+        d5  <= 3'd0;
+        mon <= 4'd1;
+      end
     end
   end
 

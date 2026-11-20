@@ -5,7 +5,7 @@ module tb_clock;
   reg clk = 0;
   always #5 clk = ~clk;
   reg rst_n = 0, frame_tick = 0, qtick = 0, fast_tick = 0;
-  reg btn_hour = 0, btn_min = 0, btn_mon = 0, btn_day = 0;
+  reg btn_hour = 0, btn_min = 0, btn_mon = 0, btn_day = 0, clr_time = 0, clr_date = 0;
   wire [3:0] h12, m5, mon;
   wire [2:0] m1, d5, d1;
   wire pm, sec0;
@@ -74,6 +74,24 @@ module tb_clock;
     end
   endtask
 
+  // A frame with a clear (and whatever else): the clear wins.
+  task clear(input integer t, input integer d, input integer second, input integer fastm, input [3:0] b);
+    begin
+      if (second) begin
+        repeat (3) begin @(negedge clk) qtick = 1; @(negedge clk) qtick = 0; end
+      end
+      @(negedge clk);
+      frame_tick = 1; fast_tick = fastm; clr_time = t; clr_date = d;
+      {btn_day, btn_mon, btn_min, btn_hour} = b;
+      @(negedge clk);
+      frame_tick = 0; fast_tick = 0; clr_time = 0; clr_date = 0;
+      {btn_day, btn_mon, btn_min, btn_hour} = 4'd0;
+      if (!t && fastm) model_min(1);
+      if (t) begin mh = 0; mm = 0; ms = 0; end
+      if (d) begin md = 1; mo = 1; end
+    end
+  endtask
+
   integer i;
   initial begin
     repeat (3) @(negedge clk);
@@ -100,6 +118,22 @@ module tb_clock;
     // Minute button zeroes the seconds.
     frame(1, 0, 4'd0); check("sec");
     frame(0, 0, 4'b0010); check("min+ zero sec");
+    // Clears: each leaves the other half alone, and wins over a tick, a
+    // fast minute and the buttons of its own half.
+    for (i = 0; i < 700; i = i + 1) begin frame(0, 1, 4'd0); check("fast"); end
+    for (i = 0; i < 40; i = i + 1) begin frame(0, 0, 4'b1100); check("date+"); end
+    clear(1, 0, 0, 0, 4'd0); check("clr time");
+    for (i = 0; i < 59; i = i + 1) begin frame(1, 0, 4'd0); check("sec after clr"); end
+    frame(1, 0, 4'd0); check("first minute after clr");
+    clear(0, 1, 0, 0, 4'd0); check("clr date");
+    for (i = 0; i < 1500; i = i + 1) begin frame(0, 1, 4'd0); check("fast"); end
+    for (i = 0; i < 59; i = i + 1) begin frame(1, 0, 4'd0); check("sec"); end
+    clear(1, 0, 1, 1, 4'b0011); check("clr time over tick, fast, buttons");
+    clear(0, 1, 0, 0, 4'b1100); check("clr date over buttons");
+    for (i = 0; i < 1439; i = i + 1) begin frame(0, 1, 4'd0); check("fast"); end
+    clear(0, 1, 0, 1, 4'd0); check("clr date over midnight");
+    clear(1, 1, 0, 0, 4'd0); check("clr both");
+    for (i = 0; i < 60; i = i + 1) begin frame(1, 0, 4'd0); check("sec after clr"); end
     $display("%0d checks, %0d failures", checks, failures);
     $finish;
   end
