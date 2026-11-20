@@ -49,39 +49,47 @@ module tt_um_pettit_glyph (
 
   // Sampled once per frame, which also debounces the buttons.
   reg [7:0] ui_s;
-  reg [2:0] col_s;
-  reg [3:0] btn_prev;
+  reg [2:0] colour;
+  reg [1:0] btn_prev;
   reg       view_prev;
   reg [4:0] hold;
   reg [1:0] fcnt;
   reg [5:0] reveal;
 
-  wire [3:0] btn = ui_s[3:0];
+  wire [1:0] btn = ui_s[1:0];
+  wire       set_colour = ui_s[2];
+  wire       grid_off = ui_s[3];
   wire       view_date = ui_s[4];
   wire [1:0] mode = ui_s[6:5];
   wire       fast = ui_s[7];
 
   // A held button repeats: after half a second, then 7.5 times a second.
   wire       rep = (hold == 5'd31);
-  wire [3:0] press = btn & (~btn_prev | {4{rep}});
+  wire [1:0] press = btn & (~btn_prev | {2{rep}});
+
+  // The two buttons set what is on screen: hours and minutes in the time
+  // view, month and day in the date view.  With set_colour high the first
+  // one steps the LED colour instead.
+  wire       btn_a = press[0] && !set_colour;
+  wire       btn_b = press[1];
 
   wire       reveal_done = (reveal[5:3] == 3'd5);
 
   always @(posedge clk) begin
     if (!rst_n) begin
       ui_s <= 8'd0;
-      col_s <= 3'd0;
-      btn_prev <= 4'd0;
+      colour <= 3'd0;
+      btn_prev <= 2'd0;
       view_prev <= 1'b0;
       hold <= 5'd0;
       fcnt <= 2'd0;
       reveal <= 6'd0;
     end else if (frame_tick) begin
       ui_s <= ui_in;
-      col_s <= uio_in[2:0];
+      if (press[0] && set_colour) colour <= colour + 3'd1;
       btn_prev <= btn;
       view_prev <= view_date;
-      hold <= (btn == 4'd0) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
+      hold <= (btn == 2'd0) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
       fcnt <= fcnt + 2'd1;
       // Draw the face on, one segment every other frame, after reset and
       // whenever the view changes.
@@ -108,10 +116,10 @@ module tt_um_pettit_glyph (
       .frame_tick(frame_tick),
       .qtick     (qtick),
       .fast_tick (fast && (fcnt == 2'd3)),
-      .btn_hour  (press[0]),
-      .btn_min   (press[1]),
-      .btn_mon   (press[2]),
-      .btn_day   (press[3]),
+      .btn_hour  (btn_a && !view_date),
+      .btn_min   (btn_b && !view_date),
+      .btn_mon   (btn_a && view_date),
+      .btn_day   (btn_b && view_date),
       .h12       (h12),
       .pm        (pm),
       .m5        (m5),
@@ -139,7 +147,8 @@ module tt_um_pettit_glyph (
       .singles(view_date ? d1 : m1),
       .mode   (mode),
       .reveal (reveal),
-      .colour (col_s),
+      .web_on (!grid_off),
+      .colour (colour),
       .top_on (pm),
       .bot_on (sec0),
       .r      (r),
@@ -162,6 +171,6 @@ module tt_um_pettit_glyph (
   assign uio_out = 8'd0;
   assign uio_oe  = 8'd0;
 
-  wire _unused = &{ena, uio_in[7:3], 1'b0};
+  wire _unused = &{ena, uio_in, 1'b0};
 
 endmodule

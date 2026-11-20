@@ -17,6 +17,8 @@ FRAME = H_TOTAL * V_TOTAL
 
 # ui_in levels
 DATE, MEDIUM, EASY = 0b0001_0000, 0b0010_0000, 0b0100_0000
+SET_COLOUR, GRID_OFF = 0b0000_0100, 0b0000_1000
+BTN_A, BTN_B = 0b0000_0001, 0b0000_0010
 
 BLACK, GREY = (0, 0, 0), (1, 1, 1)
 CYAN, RED = (0, 3, 3), (3, 0, 0)
@@ -147,7 +149,7 @@ async def test_face(dut):
     assert await scr.web(A_BOTTOM)
 
     # Hour button: 1:00.  Hard mode shows only the spokes at 9 and 5.
-    await press(0b0000_0001)
+    await press(BTN_A)
     got = await scr.frame({"a": A_TOP, "o3": SPOKE_O3, "o9": SPOKE_O9, "o5": SPOKE_O5, "o1": SPOKE_O1})
     assert got["o9"] == CYAN and got["o5"] == CYAN, got
     assert CYAN not in (got["a"], got["o3"], got["o1"]), got
@@ -158,12 +160,12 @@ async def test_face(dut):
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
     assert got["a"] == CYAN and got["o1"] != CYAN, got
 
-    # Easy adds the spoke at 1; colour 1 is red.
+    # Easy adds the spoke at 1.  With SET_COLOUR, button A steps the colour
+    # to red and leaves the hour alone.
+    await press(BTN_A, EASY | SET_COLOUR)
     dut.ui_in.value = EASY
-    dut.uio_in.value = 1
-    await scr.skip(2)
-    got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
-    assert got == {"a": RED, "o1": RED}, got
+    got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1, "o9": SPOKE_O9})
+    assert got == {"a": RED, "o1": RED, "o9": RED}, got
 
     if short:
         return
@@ -171,10 +173,10 @@ async def test_face(dut):
     # Eleven more hour presses: 12 PM, and the PM marker on the strap lights.
     for _ in range(11):
         assert await scr.pixel(BAR_TOP) == BLACK
-        await press(0b0000_0001, EASY)
+        await press(BTN_A, EASY)
     # Two minute presses: 12:02.  By now the whole face is drawn on.
-    await press(0b0000_0010, EASY)
-    await press(0b0000_0010, EASY)
+    await press(BTN_B, EASY)
+    await press(BTN_B, EASY)
     assert scr.frame_now() >= 62
     got = await scr.frame({"bar": BAR_TOP, "a": A_TOP, "b": B_TOP, "s1": STRIPE_1, "s2": STRIPE_2,
                            "o3": SPOKE_O3})
@@ -184,12 +186,31 @@ async def test_face(dut):
     dut.ui_in.value = DATE
     await scr.skip(3)
     assert await scr.web(SPOKE_O9)
-    # Day button four times meanwhile: the 5th, at the "05" corner.
+    # Button B is the day here; four times meanwhile: the 5th, at the "05" corner.
     for _ in range(4):
-        await press(0b0000_1000, DATE)
+        await press(BTN_B, DATE)
     await scr.skip(46)
     got = await scr.frame({"o9": SPOKE_O9, "o5": SPOKE_O5, "i9": SPOKE_I9, "i5": SPOKE_I5,
                            "b": B_TOP, "s1": STRIPE_1})
     assert got["o9"] == RED and got["o5"] == RED, got
     assert got["i9"] == RED and got["i5"] == RED, got
     assert RED not in (got["b"], got["s1"]), got
+
+    # Button A is the month here: February, on the flat side at 2.
+    await press(BTN_A, DATE)
+    got = await scr.frame({"a": A_TOP, "o9": SPOKE_O9, "i9": SPOKE_I9})
+    assert got["a"] == RED and got["o9"] != RED and got["i9"] == RED, got
+
+    # Grid off: the unlit segments go, the lit ones and the body stay.
+    assert await scr.web(A_BOTTOM)
+    dut.ui_in.value = DATE | GRID_OFF
+    await scr.skip(2)
+    x, y = A_BOTTOM
+    got = await scr.frame({"w0": (x, y), "w1": (x + 1, y), "a": A_TOP, "body": BODY})
+    assert got == {"w0": BLACK, "w1": BLACK, "a": RED, "body": GREY}, got
+
+    # Back in the time view the buttons did not move the clock: still 12:02 PM.
+    dut.ui_in.value = EASY
+    await scr.skip(64)
+    got = await scr.frame({"bar": BAR_TOP, "a": A_TOP, "b": B_TOP, "s2": STRIPE_2, "o3": SPOKE_O3})
+    assert all(v == RED for v in got.values()), got

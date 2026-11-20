@@ -11,6 +11,7 @@ module tb_face;
   reg [1:0] mode;
   reg [5:0] reveal;
   reg top_on, bot_on;
+  reg web_on = 1;
   wire [1:0] r, g, b;
   wire active = (hpos < 640) && (vpos < 480);
   glyph_face dut (.*);
@@ -72,6 +73,8 @@ module tb_face;
     colour = 2; mode = 0; pos_o = 11; pos_i = 2; singles = 1; frame("out/h_1111.ppm");
     // Date view, 23 July, medium, white: month 7, day 20 + 3
     colour = 7; mode = 1; pos_o = 7; pos_i = 4; singles = 3; frame("out/m_date_0723.ppm");
+    // The same with the unlit grid off.
+    web_on = 0; frame("out/m_date_0723_nogrid.ppm");
     $finish;
   end
 endmodule

@@ -37,6 +37,7 @@ module glyph_face (
     input  wire [2:0] singles,   // centre stripes lit, 0..4
     input  wire [1:0] mode,      // 0 hard, 1 medium, 2 or 3 easy
     input  wire [5:0] reveal,    // {group, index}: segments below this are shown
+    input  wire       web_on,    // draw the unlit segments
     input  wire [2:0] colour,
     input  wire       top_on,    // top strap bar lit
     input  wire       bot_on,    // bottom strap bar lit
@@ -258,7 +259,7 @@ module glyph_face (
       max2(lit_si ? cov_si : 2'd0, lit_b ? cov_b : 2'd0), lit_t ? cov_t : 2'd0));
 
   // The unlit web: every segment, at half the body's grey (a checkerboard).
-  wire web = (cov_a[1] || cov_b[1] || cov_so[1] || cov_si[1] || cov_t[1]) && dither;
+  wire web = (cov_a[1] || cov_b[1] || cov_so[1] || cov_si[1] || cov_t[1]) && dither && web_on;
 
   // ------------------------------------------------------------- strap bars
 

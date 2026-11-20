@@ -25,10 +25,10 @@ project:
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
   # Inputs
-  ui[0]: "Hour +"
-  ui[1]: "Minute +"
-  ui[2]: "Month +"
-  ui[3]: "Day +"
+  ui[0]: "Hour + / Month + / Colour +"
+  ui[1]: "Minute + / Day +"
+  ui[2]: "Button 0 sets colour"
+  ui[3]: "Grid off"
   ui[4]: "Show date"
   ui[5]: "Mode: medium"
   ui[6]: "Mode: easy"
@@ -45,9 +45,9 @@ pinout:
   uo[7]: "HSync"
 
   # Bidirectional pins
-  uio[0]: "Colour 0"
-  uio[1]: "Colour 1"
-  uio[2]: "Colour 2"
+  uio[0]: ""
+  uio[1]: ""
+  uio[2]: ""
   uio[3]: ""
   uio[4]: ""
   uio[5]: ""
