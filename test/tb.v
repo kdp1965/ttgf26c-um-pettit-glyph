@@ -6,12 +6,14 @@
 */
 module tb ();
 
-  // Dump the signals to a FST file. You can view it with gtkwave or surfer.
+    // A frame is 420000 clocks, so the dump is opt-in: make WAVES=1
+`ifdef WAVES
   initial begin
     $dumpfile("tb.fst");
     $dumpvars(0, tb);
     #1;
   end
+`endif
 
   // Wire up the inputs and outputs:
   reg clk;
@@ -27,8 +29,14 @@ module tb ();
   wire VGND = 1'b0;
 `endif
 
-  // Replace tt_um_example with your module name:
-  tt_um_example user_project (
+  // The Tiny VGA PMOD signals, for the tests and the waveform viewer.
+  wire [1:0] vga_r = {uo_out[0], uo_out[4]};
+  wire [1:0] vga_g = {uo_out[1], uo_out[5]};
+  wire [1:0] vga_b = {uo_out[2], uo_out[6]};
+  wire vga_vsync = uo_out[3];
+  wire vga_hsync = uo_out[7];
+
+  tt_um_pettit_glyph user_project (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST

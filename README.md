@@ -1,8 +1,17 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+# Glyph VGA Clock
 
-- [Read the documentation for project](docs/info.md)
+A clock and calendar for a VGA monitor that tells the time with lit lines on
+concentric hexagons, after the Tokyoflash "Glyph" concept watch. Tiny Tapeout
+GF180 (TTGF26c), one tile.
+
+![1:20 in hard, medium and easy mode](docs/modes.png)
+
+- [How to read it, the pins, how it works](docs/info.md)
+- `src/project.v` (VGA timing, inputs), `src/glyph_clock.v` (time and calendar), `src/glyph_face.v` (the pixel renderer)
+- `make units` runs the unit benches (the calendar against a model; the renderer writes frames to `test/unit/out/*.ppm`),
+  `make test` the chip bench with Verilator, `make harden` the local LibreLane flow (see the [Makefile](Makefile))
 
 ## What is Tiny Tapeout?
 

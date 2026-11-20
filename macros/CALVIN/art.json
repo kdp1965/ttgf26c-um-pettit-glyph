@@ -1,0 +1,32 @@
+{
+  "//": "tools/chip_art.py wrote this (make art); paths are relative to this file",
+  "gds": "tt_um_pettit_calvin.gds",
+  "cell": "tt_um_pettit_calvin",
+  "lef": "tt_um_pettit_calvin.lef",
+  "image": "art/calvin.png",
+  "origin": [
+    25.765,
+    103.27
+  ],
+  "box": [
+    25.765,
+    103.27,
+    55.765,
+    139.77
+  ],
+  "keepout": [
+    25.2,
+    101.92,
+    56.3,
+    141.12
+  ],
+  "pixel": 0.5,
+  "pixels": [
+    60,
+    73
+  ],
+  "metal_pixels": 2772,
+  "rectangles": 394,
+  "merged_polygons": 22,
+  "metal_area_um2": 693.0
+}

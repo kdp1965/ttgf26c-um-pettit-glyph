@@ -1,11 +1,14 @@
 /*
- * Copyright (c) 2024 Your Name
+ * Copyright (c) 2026 Ken Pettit
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Glyph: a VGA clock with the hexagonal "Glyph" watch face
+ * (640x480 at 60 Hz, 25.175 MHz clock, Tiny VGA PMOD on uo_out).
  */
 
 `default_nettype none
 
-module tt_um_example (
+module tt_um_pettit_glyph (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -16,12 +19,149 @@ module tt_um_example (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  // ------------------------------------------------------------- VGA timing
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  reg [9:0] hpos;
+  reg [9:0] vpos;
+  wire h_end = (hpos == 10'd799);
+  wire v_end = (vpos == 10'd524);
+
+  always @(posedge clk) begin
+    if (!rst_n) begin
+      hpos <= 10'd0;
+      vpos <= 10'd0;
+    end else begin
+      hpos <= h_end ? 10'd0 : hpos + 10'd1;
+      if (h_end) vpos <= v_end ? 10'd0 : vpos + 10'd1;
+    end
+  end
+
+  wire active = (hpos < 10'd640) && (vpos < 10'd480);
+  wire hsync_n = !((hpos >= 10'd656) && (hpos < 10'd752));
+  wire vsync_n = !((vpos >= 10'd490) && (vpos < 10'd492));
+
+  // State changes once per frame, on the first clock of vertical blanking.
+  wire frame_tick = (hpos == 10'd0) && (vpos == 10'd480);
+  // Four times per line (hpos 0, 256, 512, 768): the seconds time base.
+  wire qtick = (hpos[7:0] == 8'd0);
+
+  // ------------------------------------------------------------------ inputs
+
+  // Sampled once per frame, which also debounces the buttons.
+  reg [7:0] ui_s;
+  reg [2:0] col_s;
+  reg [3:0] btn_prev;
+  reg       view_prev;
+  reg [4:0] hold;
+  reg [1:0] fcnt;
+  reg [5:0] reveal;
+
+  wire [3:0] btn = ui_s[3:0];
+  wire       view_date = ui_s[4];
+  wire [1:0] mode = ui_s[6:5];
+  wire       fast = ui_s[7];
+
+  // A held button repeats: after half a second, then 7.5 times a second.
+  wire       rep = (hold == 5'd31);
+  wire [3:0] press = btn & (~btn_prev | {4{rep}});
+
+  wire       reveal_done = (reveal[5:3] == 3'd5);
+
+  always @(posedge clk) begin
+    if (!rst_n) begin
+      ui_s <= 8'd0;
+      col_s <= 3'd0;
+      btn_prev <= 4'd0;
+      view_prev <= 1'b0;
+      hold <= 5'd0;
+      fcnt <= 2'd0;
+      reveal <= 6'd0;
+    end else if (frame_tick) begin
+      ui_s <= ui_in;
+      col_s <= uio_in[2:0];
+      btn_prev <= btn;
+      view_prev <= view_date;
+      hold <= (btn == 4'd0) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
+      fcnt <= fcnt + 2'd1;
+      // Draw the face on, one segment every other frame, after reset and
+      // whenever the view changes.
+      if (view_prev != view_date) reveal <= 6'd0;
+      else if (!reveal_done && fcnt[0])
+        reveal <= (reveal[2:0] == 3'd5) ? {reveal[5:3] + 3'd1, 3'd0} : reveal + 6'd1;
+    end
+  end
+
+  // ------------------------------------------------------------------- clock
+
+  wire [3:0] h12;
+  wire       pm;
+  wire [3:0] m5;
+  wire [2:0] m1;
+  wire [3:0] mon;
+  wire [2:0] d5;
+  wire [2:0] d1;
+  wire       sec0;
+
+  glyph_clock clock (
+      .clk       (clk),
+      .rst_n     (rst_n),
+      .frame_tick(frame_tick),
+      .qtick     (qtick),
+      .fast_tick (fast && (fcnt == 2'd3)),
+      .btn_hour  (press[0]),
+      .btn_min   (press[1]),
+      .btn_mon   (press[2]),
+      .btn_day   (press[3]),
+      .h12       (h12),
+      .pm        (pm),
+      .m5        (m5),
+      .m1        (m1),
+      .mon       (mon),
+      .d5        (d5),
+      .d1        (d1),
+      .sec0      (sec0)
+  );
+
+  // -------------------------------------------------------------------- face
+
+  wire [1:0] r;
+  wire [1:0] g;
+  wire [1:0] b;
+
+  glyph_face face (
+      .clk    (clk),
+      .rst_n  (rst_n),
+      .hpos   (hpos),
+      .vpos   (vpos),
+      .active (active),
+      .pos_o  (view_date ? mon : h12),
+      .pos_i  (view_date ? {1'b0, d5} : m5),
+      .singles(view_date ? d1 : m1),
+      .mode   (mode),
+      .reveal (reveal),
+      .colour (col_s),
+      .top_on (pm),
+      .bot_on (sec0),
+      .r      (r),
+      .g      (g),
+      .b      (b)
+  );
+
+  // The face takes two clocks for a pixel, so the syncs take two registers.
+  reg [1:0] hsync_d;
+  reg [1:0] vsync_d;
+  always @(posedge clk) begin
+    hsync_d <= {hsync_d[0], hsync_n};
+    vsync_d <= {vsync_d[0], vsync_n};
+  end
+  wire hsync_q = hsync_d[1];
+  wire vsync_q = vsync_d[1];
+
+  // Tiny VGA PMOD.
+  assign uo_out  = {hsync_q, b[0], g[0], r[0], vsync_q, b[1], g[1], r[1]};
+  assign uio_out = 8'd0;
+  assign uio_oe  = 8'd0;
+
+  wire _unused = &{ena, uio_in[7:3], 1'b0};
 
 endmodule

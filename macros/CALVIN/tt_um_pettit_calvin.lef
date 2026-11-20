@@ -1,0 +1,17 @@
+VERSION 5.8 ;
+BUSBITCHARS "[]" ;
+DIVIDERCHAR "/" ;
+
+MACRO tt_um_pettit_calvin
+  CLASS BLOCK ;
+  ORIGIN 0 0 ;
+  FOREIGN tt_um_pettit_calvin 0 0 ;
+  SIZE 30.000 BY 36.500 ;
+  SYMMETRY X Y ;
+  OBS
+      LAYER Metal4 ;
+        RECT 0 0 30.000 36.500 ;
+  END
+END tt_um_pettit_calvin
+
+END LIBRARY

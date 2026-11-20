@@ -9,6 +9,25 @@
 
   "//": "If you get stuck with this config, please open an issue or get in touch via the discord.",
 
+  "//": "Chip art: Calvin in Metal4 (30.0 x 36.5 um, 0.5 um pixels) between the first and second pair of power",
+  "//": "stripes, its top 4 rows below the top row. librelane_plugin_glyph_art.py cuts the 10 rows under it",
+  "//": "(the keep-out in macros/CALVIN/art.json; no cells, taps, filler or Metal1 rails there) and merges the",
+  "//": "art cell into the GDS; the obstructions keep the router off the patch on every layer. make art rebuilds it.",
+  "meta": {
+    "flow": "Classic",
+    "substituting_steps": {
+      "+OpenROAD.CutRows": "Project.ArtKeepout",
+      "+Magic.WriteLEF": "Project.ChipArt"
+    }
+  },
+  "CHIP_ART_JSON": "dir::../macros/CALVIN/art.json",
+  "ROUTING_OBSTRUCTIONS": [
+    "Metal1 25.2 102.6 56.3 140.4",
+    "Metal2 25.2 102.6 56.3 140.4",
+    "Metal3 25.2 102.6 56.3 140.4",
+    "Metal4 25.2 102.6 56.3 140.4"
+  ],
+
   "//": "Here are some of the variables you may want to change:",
 
   "//": "PL_TARGET_DENSITY_PCT - You can increase this if Global Placement fails with error GPL-0302.",
@@ -17,7 +36,9 @@
 
   "//": "CLOCK_PERIOD - Increase this in case you are getting setup time violations.",
   "//": "The value is in nanoseconds, so 20ns == 50MHz.",
-  "CLOCK_PERIOD": 20,
+  "//": "The pixel clock is 39.72 ns (25.175 MHz). The flow only repairs timing at the typical corner,",
+  "//": "so it is hardened at 30 ns: the slow corner (125C, 3.0V) then comes out at 32.6 ns.",
+  "CLOCK_PERIOD": 30,
 
   "//": "Hold slack margin - Increase them in case you are getting hold violations.",
   "PL_RESIZER_HOLD_SLACK_MARGIN": 0.1,
