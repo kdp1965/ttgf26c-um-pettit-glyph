@@ -40,14 +40,16 @@ module glyph_clock #(
     output reg  [3:0] mon,
     output reg  [2:0] d5,
     output reg  [2:0] d1,
-    output wire       sec0
+    output reg  [3:0] s5,          // seconds / 5, 0..11
+    output wire       sec0         // seconds are odd
 );
 
   reg [16:0] pre;
   reg        sec_pend;
-  reg [ 5:0] sec;
+  reg [ 2:0] s1;
 
-  assign sec0 = sec[0];
+  // 5 s5 + s1 is odd when s5 and s1 differ in their low bit.
+  assign sec0 = s5[0] ^ s1[0];
 
   wire pre_wrap = (pre == QTICKS_PER_SEC - 17'd1);
 
@@ -75,7 +77,8 @@ module glyph_clock #(
     endcase
   end
 
-  wire sec_wrap = (sec == 6'd59);
+  wire s1_wrap = (s1 == 3'd4);
+  wire sec_wrap = s1_wrap && (s5 == 4'd11);
   wire m1_wrap = (m1 == 3'd4);
   wire m5_wrap = (m5 == 4'd11);
   wire h_wrap = (h12 == 4'd11);
@@ -89,7 +92,8 @@ module glyph_clock #(
 
   always @(posedge clk) begin
     if (!rst_n) begin
-      sec <= 6'd0;
+      s1  <= 3'd0;
+      s5  <= 4'd0;
       m1  <= 3'd0;
       m5  <= 4'd0;
       h12 <= 4'd0;
@@ -98,8 +102,13 @@ module glyph_clock #(
       d5  <= 3'd0;
       mon <= 4'd1;
     end else if (frame_tick) begin
-      if (btn_min) sec <= 6'd0;
-      else if (sec_pend) sec <= sec_wrap ? 6'd0 : sec + 6'd1;
+      if (btn_min) begin
+        s1 <= 3'd0;
+        s5 <= 4'd0;
+      end else if (sec_pend) begin
+        s1 <= s1_wrap ? 3'd0 : s1 + 3'd1;
+        if (s1_wrap) s5 <= sec_wrap ? 4'd0 : s5 + 4'd1;
+      end
 
       if (nat_min || btn_min) begin
         m1 <= m1_wrap ? 3'd0 : m1 + 3'd1;
@@ -129,7 +138,8 @@ module glyph_clock #(
       if (nat_mon || btn_mon) mon <= (mon == 4'd11) ? 4'd0 : mon + 4'd1;
 
       if (clr_time) begin
-        sec <= 6'd0;
+        s1  <= 3'd0;
+        s5  <= 4'd0;
         m1  <= 3'd0;
         m5  <= 4'd0;
         h12 <= 4'd0;

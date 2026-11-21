@@ -6,7 +6,7 @@ module tb_clock;
   always #5 clk = ~clk;
   reg rst_n = 0, frame_tick = 0, qtick = 0, fast_tick = 0;
   reg btn_hour = 0, btn_min = 0, btn_mon = 0, btn_day = 0, clr_time = 0, clr_date = 0;
-  wire [3:0] h12, m5, mon;
+  wire [3:0] h12, m5, mon, s5;
   wire [2:0] m1, d5, d1;
   wire pm, sec0;
   glyph_clock #(.QTICKS_PER_SEC(17'd3)) dut (.*);
@@ -22,7 +22,7 @@ module tb_clock;
     begin
       checks = checks + 1;
       if (h12 !== (mh % 12) || pm !== (mh >= 12) || (m5 * 5 + m1) !== mm || m1 > 4 ||
-          (d5 * 5 + d1) !== md || d1 > 4 || mon !== (mo % 12) || sec0 !== ms[0]) begin
+          (d5 * 5 + d1) !== md || d1 > 4 || mon !== (mo % 12) || sec0 !== ms[0] || s5 !== (ms / 5)) begin
         failures = failures + 1;
         if (failures < 10)
           $display("FAIL %0s: got %0d%s:%0d day %0d mon %0d, want %0d:%0d day %0d mon %0d", what,

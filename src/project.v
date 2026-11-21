@@ -113,6 +113,7 @@ module tt_um_pettit_glyph (
   wire [2:0] d5;
   wire [2:0] d1;
   wire       sec0;
+  wire [3:0] s5;
 
   glyph_clock clock (
       .clk       (clk),
@@ -133,6 +134,7 @@ module tt_um_pettit_glyph (
       .mon       (mon),
       .d5        (d5),
       .d1        (d1),
+      .s5        (s5),
       .sec0      (sec0)
   );
 
@@ -157,6 +159,7 @@ module tt_um_pettit_glyph (
       .colour (colour),
       .top_on (pm),
       .bot_on (sec0),
+      .secs5  (s5),
       .r      (r),
       .g      (g),
       .b      (b)

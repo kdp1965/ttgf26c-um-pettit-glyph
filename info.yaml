@@ -2,7 +2,7 @@
 project:
   title:        "Glyph VGA Clock"      # Project title
   author:       "Ken Pettit"      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
+  discord:      "busy_courgette_50064"
   description:  "VGA clock and calendar with the hexagonal Glyph watch face"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     25175000      # Clock frequency in Hz (or 0 if not applicable)
@@ -25,9 +25,9 @@ project:
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
   # Inputs
-  ui[0]: "Hour + / Month + / Colour +"
-  ui[1]: "Minute + / Day +"
-  ui[2]: "Button 0 sets colour"
+  ui[0]: "Hour+ / Month+ / Color+"
+  ui[1]: "Minute+ / Day+"
+  ui[2]: "Button 0 sets color"
   ui[3]: "Grid on"
   ui[4]: "Show date"
   ui[5]: "Mode: medium"

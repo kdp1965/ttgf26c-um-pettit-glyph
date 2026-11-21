@@ -12,6 +12,7 @@ module tb_face;
   reg [5:0] reveal;
   reg top_on, bot_on;
   reg web_on = 1;
+  reg [3:0] secs5 = 0;
   wire [1:0] r, g, b;
   wire active = (hpos < 640) && (vpos < 480);
   glyph_face dut (.*);
@@ -48,31 +49,31 @@ module tb_face;
     reveal = 6'h3f; top_on = 0; bot_on = 1; colour = 0;
     // 1:20 hard / medium / easy (the article's comparison)
     pos_o = 1; pos_i = 4; singles = 0;
-    mode = 0; frame("out/h_0120.ppm");
+    mode = 0; secs5 = 3; frame("out/h_0120.ppm");
     mode = 1; frame("out/m_0120.ppm");
     mode = 2; frame("out/e_0120.ppm");
     // 3:19 hard, red
-    colour = 1; mode = 0; pos_o = 3; pos_i = 3; singles = 4; frame("out/h_0319.ppm");
+    secs5 = 7; colour = 1; mode = 0; pos_o = 3; pos_i = 3; singles = 4; frame("out/h_0319.ppm");
     // 12:00 hard, green
-    colour = 2; pos_o = 0; pos_i = 0; singles = 0; top_on = 1; frame("out/h_1200.ppm");
+    secs5 = 0; colour = 2; pos_o = 0; pos_i = 0; singles = 0; top_on = 1; frame("out/h_1200.ppm");
     // 10:44 easy, magenta
-    colour = 4; mode = 2; pos_o = 10; pos_i = 8; singles = 4; frame("out/e_1044.ppm");
+    secs5 = 11; colour = 4; mode = 2; pos_o = 10; pos_i = 8; singles = 4; frame("out/e_1044.ppm");
     // 6:21 medium, amber
-    colour = 6; mode = 1; pos_o = 6; pos_i = 4; singles = 1; frame("out/m_0621.ppm");
+    secs5 = 5; colour = 6; mode = 1; pos_o = 6; pos_i = 4; singles = 1; frame("out/m_0621.ppm");
     // 11:11 easy white, half drawn
     colour = 7; mode = 2; pos_o = 11; pos_i = 2; singles = 1; reveal = {3'd1, 3'd3}; frame("out/e_1111_rev.ppm");
     // More reference screenshots.
     reveal = 6'h3f; bot_on = 0;
     // 8:54 PM medium, blue
-    colour = 3; mode = 1; pos_o = 8; pos_i = 10; singles = 4; top_on = 1; frame("out/m_0854pm.ppm");
+    secs5 = 9; colour = 3; mode = 1; pos_o = 8; pos_i = 10; singles = 4; top_on = 1; frame("out/m_0854pm.ppm");
     // 2:32 PM easy, yellow
-    colour = 5; mode = 2; pos_o = 2; pos_i = 6; singles = 2; top_on = 1; frame("out/e_0232pm.ppm");
+    secs5 = 2; colour = 5; mode = 2; pos_o = 2; pos_i = 6; singles = 2; top_on = 1; frame("out/e_0232pm.ppm");
     // 7:05 AM easy, cyan
-    colour = 0; mode = 2; pos_o = 7; pos_i = 1; singles = 0; top_on = 0; frame("out/e_0705.ppm");
+    secs5 = 6; colour = 0; mode = 2; pos_o = 7; pos_i = 1; singles = 0; top_on = 0; frame("out/e_0705.ppm");
     // 11:11 AM hard, green
-    colour = 2; mode = 0; pos_o = 11; pos_i = 2; singles = 1; frame("out/h_1111.ppm");
+    secs5 = 1; colour = 2; mode = 0; pos_o = 11; pos_i = 2; singles = 1; frame("out/h_1111.ppm");
     // Date view, 23 July, medium, white: month 7, day 20 + 3
-    colour = 7; mode = 1; pos_o = 7; pos_i = 4; singles = 3; frame("out/m_date_0723.ppm");
+    secs5 = 4; colour = 7; mode = 1; pos_o = 7; pos_i = 4; singles = 3; frame("out/m_date_0723.ppm");
     // The same with the unlit grid off.
     web_on = 0; frame("out/m_date_0723_nogrid.ppm");
     $finish;

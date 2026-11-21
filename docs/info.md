@@ -38,6 +38,10 @@ The mode pins make the corner numbers easier:
 The strap carries two bars: the **top bar is lit from noon to midnight** (PM),
 and the **bottom bar blinks** once a second.
 
+A row of eleven **ticks at the bottom of the face**, between the 5 and 7
+o'clock spokes, counts the seconds in fives: the first lights at 5 seconds,
+the second at 10, and so on to 55; all go out when the minute turns.
+
 With **Show date** high the same face shows the date: the outer ring is the
 month (1 to 12) and the inner ring and stripes are the day, read like minutes
 (the 23rd is the "20" position and three stripes). After reset, and whenever

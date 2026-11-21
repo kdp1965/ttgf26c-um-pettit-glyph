@@ -39,6 +39,9 @@ SPOKE_I9 = (320 - 111, 240)  # inner spokes
 SPOKE_I5 = (320 + 55, 240 + 96)
 STRIPE_1 = (320 + 24, 240)   # centre stripes, rightmost first
 STRIPE_2 = (320 + 8, 240)
+TICK_1 = (320 - 80, 240 + 181)   # seconds ticks: 5 s, 10 s, 30 s
+TICK_2 = (320 - 64, 240 + 181)
+TICK_6 = (320, 240 + 181)
 
 
 class Screen:
@@ -150,6 +153,8 @@ async def test_face(dut):
     got = await scr.frame({"a": A_TOP, "o3": SPOKE_O3, "o9": SPOKE_O9, "bar": BAR_TOP})
     assert got == {"a": CYAN, "o3": CYAN, "o9": CYAN, "bar": BLACK}, got
     assert await scr.web(A_BOTTOM)
+    # No seconds tick is lit in the first five seconds.
+    assert await scr.web(TICK_1) and await scr.web(TICK_6)
 
     # Hour button: 1:00.  Hard mode shows only the spokes at 9 and 5.
     await press(BTN_A)
@@ -221,6 +226,7 @@ async def test_face(dut):
     # Both buttons together: the time goes back to 12:00 AM.  The colour is
     # still red.
     await press(BTN_A | BTN_B, EASY)
+    t_clear = scr.frame_now()
     got = await scr.frame({"bar": BAR_TOP, "a": A_TOP, "b": B_TOP, "s2": STRIPE_2, "o3": SPOKE_O3})
     assert got["bar"] == BLACK and got["s2"] != RED, got
     assert got["a"] == RED and got["b"] == RED and got["o3"] == RED, got
@@ -238,3 +244,10 @@ async def test_face(dut):
                            "i5": SPOKE_I5})
     assert got["o9"] == RED and got["o5"] == RED and got["b"] == RED and got["s1"] == RED, got
     assert RED not in (got["a"], got["i5"]), got
+
+    # The seconds ticks: the time was cleared at the last press of both in
+    # the time view; five seconds (300 frames) after it the first tick lights.
+    assert await scr.web(TICK_1)
+    await scr.goto(t_clear + 302, 0, 0)
+    got = await scr.frame({"t1": TICK_1, "t2": TICK_2})
+    assert got["t1"] == RED and got["t2"] != RED, got

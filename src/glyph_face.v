@@ -41,6 +41,7 @@ module glyph_face (
     input  wire [2:0] colour,
     input  wire       top_on,    // top strap bar lit
     input  wire       bot_on,    // bottom strap bar lit
+    input  wire [3:0] secs5,     // seconds / 5, 0..11: that many ticks lit
     output reg  [1:0] r,
     output reg  [1:0] g,
     output reg  [1:0] b
@@ -185,6 +186,15 @@ module glyph_face (
 
   wire       bar_x = (hpos[9:3] == 7'd43);   // x = 344..351
 
+  // The seconds: eleven ticks, 8 px wide every 16 px, in the bottom of the
+  // face between the 5 and 7 o'clock spokes.  Tick n (1..11) is centred on
+  // x = 320 + 16 (n - 6), and is lit from second 5 n.
+  wire [9:0] tick_u = hpos - 10'd220;
+  wire       tick_1 = (tick_u[9:8] == 2'd0) && !tick_u[3] && (tick_u[7:4] != 4'd0) &&
+                      (tick_u[7:4] < 4'd12) && (vpos[9:4] == 6'd26) && (vpos[3:2] != 2'd3);
+  reg        tick;
+  reg  [3:0] tick_n;
+
   always @(posedge clk) begin
     d <= d_1;
     edge_j <= edge_j_1;
@@ -197,6 +207,8 @@ module glyph_face (
     strap_x <= (hpos >= 10'd224) && (hpos < 10'd416);
     strap_top <= bar_x && (vpos < 10'd24);
     strap_bot <= bar_x && (vpos >= 10'd456);
+    tick <= tick_1;
+    tick_n <= tick_u[7:4];
   end
 
   // ------------------------------------------------------------ radial bands
@@ -255,11 +267,13 @@ module glyph_face (
   wire lit_b = seg_i[{1'b0, edge_j}] && ({3'd3, edge_j} < reveal);
   wire lit_t = (singles >= bar_n) && ({3'd4, bar_idx} < reveal);
 
+  wire lit_tick = tick && (tick_n <= secs5);
+
   wire [1:0] cov_lit = max2(max2(lit_so ? cov_so : 2'd0, lit_a ? cov_a : 2'd0), max2(
-      max2(lit_si ? cov_si : 2'd0, lit_b ? cov_b : 2'd0), lit_t ? cov_t : 2'd0));
+      max2(lit_si ? cov_si : 2'd0, lit_b ? cov_b : 2'd0), (lit_t ? cov_t : 2'd0) | {2{lit_tick}}));
 
   // The unlit web: every segment, at half the body's grey (a checkerboard).
-  wire web = (cov_a[1] || cov_b[1] || cov_so[1] || cov_si[1] || cov_t[1]) && dither && web_on;
+  wire web = (cov_a[1] || cov_b[1] || cov_so[1] || cov_si[1] || cov_t[1] || tick) && dither && web_on;
 
   // ------------------------------------------------------------- strap bars
 
