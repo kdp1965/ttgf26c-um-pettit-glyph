@@ -2,7 +2,7 @@
 
 Glyph is a clock and calendar on a VGA monitor (640x480 at 60 Hz) that tells
 the time using a "Glyph" cryptic format.  This was inspired by a watch
-design concept I saw on a "Tokyoflash" website in 2012.  It uses lit "LED" segments on
+design concept I saw on a "Tokyoflash" website in 2014.  It uses lit "LED" segments on
 a web of concentric hexagons instead of hands or digits.
 
 ![1:20 in hard, medium and easy mode](modes.png)

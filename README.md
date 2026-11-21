@@ -10,6 +10,8 @@ GF180 (TTGF26c), one tile.
 
 Example showing the time 1:20 in Hard, Medium and Easy modes.  
 
+![](https://blog.tokyoflash.com/wp-content/uploads/2014/04/hours-mins_opt.gif)
+
 - [How to read it, the pins, how it works](docs/info.md)
 - `src/project.v` (VGA timing, inputs), `src/glyph_clock.v` (time and calendar), `src/glyph_face.v` (the pixel renderer)
 - `make units` runs the unit benches (the calendar against a model; the renderer writes frames to `test/unit/out/*.ppm`),
