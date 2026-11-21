@@ -42,10 +42,8 @@ module glyph_face (
     input  wire       top_on,    // top strap bar lit
     input  wire       bot_on,    // bottom strap bar lit
     input  wire [3:0] secs5,     // seconds / 5, 0..11: that many ticks lit
-    input  wire       txt_on,    // show the time in digits, lower right
-    input  wire [3:0] txt_h,     // hour 0..11 (0 is twelve)
-    input  wire [3:0] txt_m5,    // minutes / 5, 0..11
-    input  wire [2:0] txt_m1,    // minutes mod 5, 0..4
+    input  wire       txt_on,    // also write pos_o, pos_i and singles in digits, lower right
+    input  wire       txt_date,  // as a date, "7/23", not a time, "7:23"
     output reg  [1:0] r,
     output reg  [1:0] g,
     output reg  [1:0] b
@@ -199,9 +197,11 @@ module glyph_face (
   reg        tick;
   reg  [3:0] tick_n;
 
-  // The time in digits, "12:34", for whoever cannot read the face yet: a
-  // 3x5 font on 8 px cells, five characters 4 cells apart, in the lower
-  // right corner (x = 480..631, y = 424..463).
+  // What the face shows, in digits, for whoever cannot read it yet: "12:34"
+  // or "12/31".  The digits come from the same three numbers as the lines:
+  // pos_o (0 is twelve), then 5 pos_i + singles.  A 3x5 font on 8 px cells,
+  // five characters 4 cells apart, in the lower right corner
+  // (x = 480..631, y = 424..463).
   function [14:0] font(input [3:0] ch);   // rows top to bottom, 3 bits each
     begin
       case (ch)
@@ -216,6 +216,7 @@ module glyph_face (
         4'd8: font = 15'b111_101_111_101_111;
         4'd9: font = 15'b111_101_111_001_111;
         4'd10: font = 15'b000_010_000_010_000;   // colon
+        4'd11: font = 15'b001_001_010_100_100;   // slash
         default: font = 15'd0;                   // blank
       endcase
     end
@@ -224,15 +225,15 @@ module glyph_face (
   wire [6:0] txt_cx = hpos[9:3] - 7'd60;   // cell column 0..18
   wire [6:0] txt_cy = vpos[9:3] - 7'd53;   // cell row 0..4
   wire       txt_in = (txt_cx < 7'd19) && (txt_cy < 7'd5) && (txt_cx[1:0] != 2'd3);
-  wire       h_two = (txt_h == 4'd0) || (txt_h >= 4'd10);   // 10, 11, 12
+  wire       h_two = (pos_o == 4'd0) || (pos_o >= 4'd10);   // 10, 11, 12
   reg  [3:0] txt_ch;
   always @(*) begin
     case (txt_cx[4:2])
       3'd0: txt_ch = h_two ? 4'd1 : 4'd15;
-      3'd1: txt_ch = (txt_h == 4'd0) ? 4'd2 : (txt_h >= 4'd10) ? txt_h - 4'd10 : txt_h;
-      3'd2: txt_ch = 4'd10;
-      3'd3: txt_ch = {1'b0, txt_m5[3:1]};
-      default: txt_ch = txt_m5[0] ? {1'b0, txt_m1} + 4'd5 : {1'b0, txt_m1};
+      3'd1: txt_ch = (pos_o == 4'd0) ? 4'd2 : (pos_o >= 4'd10) ? pos_o - 4'd10 : pos_o;
+      3'd2: txt_ch = txt_date ? 4'd11 : 4'd10;
+      3'd3: txt_ch = {1'b0, pos_i[3:1]};
+      default: txt_ch = pos_i[0] ? {1'b0, singles} + 4'd5 : {1'b0, singles};
     endcase
   end
   wire [14:0] txt_rows = font(txt_ch);
@@ -332,12 +333,12 @@ module glyph_face (
   reg [5:0] cmax;
   always @(*) begin
     case (colour)
-      3'd0: cmax = {2'd0, 2'd3, 2'd3};   // cyan
+      3'd0: cmax = {2'd3, 2'd3, 2'd0};   // yellow
       3'd1: cmax = {2'd3, 2'd0, 2'd0};   // red
       3'd2: cmax = {2'd0, 2'd3, 2'd0};   // green
       3'd3: cmax = {2'd1, 2'd1, 2'd3};   // blue
       3'd4: cmax = {2'd3, 2'd0, 2'd3};   // magenta
-      3'd5: cmax = {2'd3, 2'd3, 2'd0};   // yellow
+      3'd5: cmax = {2'd0, 2'd3, 2'd3};   // cyan
       3'd6: cmax = {2'd3, 2'd2, 2'd0};   // amber
       default: cmax = {2'd3, 2'd3, 2'd3};  // white
     endcase

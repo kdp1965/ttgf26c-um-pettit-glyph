@@ -61,7 +61,7 @@ units:
 
 # The frames tb_face.v rendered, as PNGs: one per frame, at the monitor's
 # 640x480, and the two sheets the datasheet uses.
-SHOTS = h_0120 m_0120 e_0120 h_0319 h_1200 e_1044 m_0621 m_0854pm e_0232pm e_0705 h_1111 m_date_0723 m_date_0723_nogrid d_1044 d_0705 d_1238 d_0926
+SHOTS = h_0120 m_0120 e_0120 h_0319 h_1200 e_1044 m_0621 m_0854pm e_0232pm e_0705 h_1111 m_date_0723 m_date_0723_nogrid d_1044 d_0705 d_1238 d_0926 d_date_0723 d_date_1231 d_date_0205
 P2P = python3 test/unit/ppm2png.py
 screenshots:
 	mkdir -p docs/screenshots

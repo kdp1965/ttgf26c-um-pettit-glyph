@@ -40,7 +40,8 @@ and the **bottom bar blinks** once a second.
 
 With **both mode pins high** the face is in easy mode and the time is also
 written in digits in the lower right corner (12 hour, in a 3x5 font), for
-checking your reading. The digits always show the time, also in the date view.
+checking your reading. In the date view the digits are the date, month first:
+`7/23` is 23 July.
 
 ![12:38 with the digits on](screenshots/d_1238.png)
 
@@ -90,7 +91,7 @@ reset the face draws on and shows 12:00 AM, 1 January.
 | `ui[2]` | Button A steps the LED colour instead of the hour or month |
 | `ui[3]` | Grid on: high draws the unlit segments dimly; low shows only the lit ones and the watch body |
 | `ui[4]` | Show the date instead of the time |
-| `ui[6:5]` | Mode: 00 hard, 01 medium, 10 easy, 11 easy with the time in digits |
+| `ui[6:5]` | Mode: 00 hard, 01 medium, 10 easy, 11 easy with the time (or date) in digits |
 | `ui[7]` | Fast: the clock runs 900 times faster, a minute every 4 frames |
 
 The two buttons set whatever is on screen. A press advances its field by
@@ -101,8 +102,8 @@ view. Nothing else changes, so a host can set any time or date by clearing
 and then counting presses. The inputs are sampled once per frame, which
 debounces them.
 
-The LED colour steps through cyan (after reset), red, green, blue, magenta,
-yellow, amber and white.
+The LED colour steps through yellow (after reset), red, green, blue, magenta,
+cyan, amber and white.
 
 ## External hardware
 

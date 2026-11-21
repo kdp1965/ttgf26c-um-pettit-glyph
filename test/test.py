@@ -21,7 +21,7 @@ SET_COLOUR, GRID = 0b0000_0100, 0b0000_1000
 BTN_A, BTN_B = 0b0000_0001, 0b0000_0010
 
 BLACK, GREY = (0, 0, 0), (1, 1, 1)
-CYAN, RED = (0, 3, 3), (3, 0, 0)
+YELLOW, RED = (3, 3, 0), (3, 0, 0)
 
 # Probe points (x, y); the face is centred on (320, 240).
 BACKGROUND = (10, 240)
@@ -149,10 +149,10 @@ async def test_face(dut):
     assert got == {"bg": BLACK, "body": GREY, "strap": GREY, "bar": BLACK}, got
     assert await scr.web(A_TOP)
 
-    # The outer ring is drawn on by frame 16: 12:00, hard mode, cyan.
+    # The outer ring is drawn on by frame 16: 12:00, hard mode, yellow.
     await scr.skip(16)
     got = await scr.frame({"a": A_TOP, "o3": SPOKE_O3, "o9": SPOKE_O9, "bar": BAR_TOP})
-    assert got == {"a": CYAN, "o3": CYAN, "o9": CYAN, "bar": BLACK}, got
+    assert got == {"a": YELLOW, "o3": YELLOW, "o9": YELLOW, "bar": BLACK}, got
     assert await scr.web(A_BOTTOM)
     # No seconds tick is lit in the first five seconds.
     assert await scr.web(TICK_1) and await scr.web(TICK_6)
@@ -160,14 +160,14 @@ async def test_face(dut):
     # Hour button: 1:00.  Hard mode shows only the spokes at 9 and 5.
     await press(BTN_A)
     got = await scr.frame({"a": A_TOP, "o3": SPOKE_O3, "o9": SPOKE_O9, "o5": SPOKE_O5, "o1": SPOKE_O1})
-    assert got["o9"] == CYAN and got["o5"] == CYAN, got
-    assert CYAN not in (got["a"], got["o3"], got["o1"]), got
+    assert got["o9"] == YELLOW and got["o5"] == YELLOW, got
+    assert YELLOW not in (got["a"], got["o3"], got["o1"]), got
 
     # Medium joins them round the large hexagon.
     ui(MEDIUM)
     await scr.skip(2)
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
-    assert got["a"] == CYAN and got["o1"] != CYAN, got
+    assert got["a"] == YELLOW and got["o1"] != YELLOW, got
 
     # Both mode pins: easy, with the time in digits in the lower right.
     assert await scr.pixel(COLON) == BLACK
@@ -175,7 +175,7 @@ async def test_face(dut):
     await scr.skip(2)
     x, y = COLON
     got = await scr.frame({"dot": COLON, "gap": (x, y + 8), "o1": SPOKE_O1})
-    assert got == {"dot": CYAN, "gap": BLACK, "o1": CYAN}, got
+    assert got == {"dot": YELLOW, "gap": BLACK, "o1": YELLOW}, got
 
     # Easy adds the spoke at 1.  With SET_COLOUR, button A steps the colour
     # to red and leaves the hour alone.
@@ -253,6 +253,13 @@ async def test_face(dut):
                            "i5": SPOKE_I5})
     assert got["o9"] == RED and got["o5"] == RED and got["b"] == RED and got["s1"] == RED, got
     assert RED not in (got["a"], got["i5"]), got
+
+    # Digits in the date view: a slash where the colon was.
+    ui(DATE | MEDIUM | EASY)
+    await scr.skip(2)
+    x, y = COLON
+    got = await scr.frame({"slash": (x + 8, y - 8), "colon": COLON})
+    assert got == {"slash": RED, "colon": BLACK}, got
 
     # The seconds ticks: the time was cleared at the last press of both in
     # the time view; five seconds (300 frames) after it the first tick lights.

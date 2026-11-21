@@ -4,6 +4,20 @@
  *
  * Glyph: a VGA clock with the hexagonal "Glyph" watch face
  * (640x480 at 60 Hz, 25.175 MHz clock, Tiny VGA PMOD on uo_out).
+ *
+ * Set the time:
+ *    - Set ui[2] = 0, ui[4] = 0
+ *      - ui[0] increments / adds hours
+ *      - ui[1] increments / adds minutes
+ * Set the date:
+ *    - Set ui[4] = 1, ui[2] = 0
+ *      - ui[0] increments / adds months
+ *      - ui[1] increments / adds days
+ * Set the color
+ *    - Set ui[2] = 1, ui[4] = 0
+ *      - ui[0] cycles the face color
+ * Show numeric time (or date, with ui[4] = 1)
+ *    - Set ui[5] = 1, ui[6] = 1
  */
 
 `default_nettype none
@@ -161,9 +175,7 @@ module tt_um_pettit_glyph (
       .bot_on (sec0),
       .secs5  (s5),
       .txt_on (mode == 2'd3),
-      .txt_h  (h12),
-      .txt_m5 (m5),
-      .txt_m1 (m1),
+      .txt_date(view_date),
       .r      (r),
       .g      (g),
       .b      (b)

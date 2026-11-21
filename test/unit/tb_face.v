@@ -13,9 +13,7 @@ module tb_face;
   reg top_on, bot_on;
   reg web_on = 1;
   reg [3:0] secs5 = 0;
-  reg txt_on = 0;
-  reg [3:0] txt_h = 0, txt_m5 = 0;
-  reg [2:0] txt_m1 = 0;
+  reg txt_on = 0, txt_date = 0;
   wire [1:0] r, g, b;
   wire active = (hpos < 640) && (vpos < 480);
   glyph_face dut (.*);
@@ -69,9 +67,9 @@ module tb_face;
     reveal = 6'h3f; bot_on = 0;
     // 8:54 PM medium, blue
     secs5 = 9; colour = 3; mode = 1; pos_o = 8; pos_i = 10; singles = 4; top_on = 1; frame("out/m_0854pm.ppm");
-    // 2:32 PM easy, yellow
+    // 2:32 PM easy, cyan
     secs5 = 2; colour = 5; mode = 2; pos_o = 2; pos_i = 6; singles = 2; top_on = 1; frame("out/e_0232pm.ppm");
-    // 7:05 AM easy, cyan
+    // 7:05 AM easy, yellow
     secs5 = 6; colour = 0; mode = 2; pos_o = 7; pos_i = 1; singles = 0; top_on = 0; frame("out/e_0705.ppm");
     // 11:11 AM hard, green
     secs5 = 1; colour = 2; mode = 0; pos_o = 11; pos_i = 2; singles = 1; frame("out/h_1111.ppm");
@@ -81,10 +79,15 @@ module tb_face;
     web_on = 0; frame("out/m_date_0723_nogrid.ppm");
     // Easy with the time in digits: 10:44, 7:05, 12:38, 9:26.
     web_on = 1; txt_on = 1; mode = 3;
-    colour = 4; secs5 = 11; pos_o = 10; pos_i = 8; singles = 4; txt_h = 10; txt_m5 = 8; txt_m1 = 4; frame("out/d_1044.ppm");
-    colour = 0; secs5 = 6; pos_o = 7; pos_i = 1; singles = 0; txt_h = 7; txt_m5 = 1; txt_m1 = 0; frame("out/d_0705.ppm");
-    colour = 5; secs5 = 2; pos_o = 0; pos_i = 7; singles = 3; txt_h = 0; txt_m5 = 7; txt_m1 = 3; frame("out/d_1238.ppm");
-    colour = 7; secs5 = 9; pos_o = 9; pos_i = 5; singles = 1; txt_h = 9; txt_m5 = 5; txt_m1 = 1; frame("out/d_0926.ppm");
+    colour = 4; secs5 = 11; pos_o = 10; pos_i = 8; singles = 4; frame("out/d_1044.ppm");
+    colour = 0; secs5 = 6; pos_o = 7; pos_i = 1; singles = 0; frame("out/d_0705.ppm");
+    colour = 5; secs5 = 2; pos_o = 0; pos_i = 7; singles = 3; frame("out/d_1238.ppm");
+    colour = 7; secs5 = 9; pos_o = 9; pos_i = 5; singles = 1; frame("out/d_0926.ppm");
+    // Dates in digits: 7/23, 12/31, 2/05.
+    txt_date = 1;
+    colour = 2; secs5 = 4; pos_o = 7; pos_i = 4; singles = 3; frame("out/d_date_0723.ppm");
+    colour = 6; secs5 = 8; pos_o = 0; pos_i = 6; singles = 1; frame("out/d_date_1231.ppm");
+    colour = 1; secs5 = 0; pos_o = 2; pos_i = 1; singles = 0; frame("out/d_date_0205.ppm");
     $finish;
   end
 endmodule
