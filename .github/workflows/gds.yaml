@@ -13,10 +13,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build GDS
-        uses: TinyTapeout/tt-gds-action@ttgf26c
+      - name: Read top module name
+        id: top_module
+        run: echo "TOP_MODULE=$(yq '.project.top_module' info.yaml)" >> "$GITHUB_OUTPUT"
+
+      # Publish the locally hardened views in local_build/ instead of running
+      # LibreLane on the runner: at this density the route converges with the
+      # local flow and not with the runner's (make promote RUN=runs/<TAG>
+      # refreshes local_build/ from a run).  The netlist is the powered one,
+      # which is what the gate level job simulates on GF180.
+      - name: Create and publish the GDS artifact
+        uses: TinyTapeout/tt-gds-action/custom_gds@ttgf26c
         with:
           pdk: gf180mcuD
+          top_module: ${{ steps.top_module.outputs.TOP_MODULE }}
+          gds_path: local_build/gds/${{ steps.top_module.outputs.TOP_MODULE }}.gds
+          lef_path: local_build/lef/${{ steps.top_module.outputs.TOP_MODULE }}.lef
+          verilog_path: local_build/pnl/${{ steps.top_module.outputs.TOP_MODULE }}.pnl.v
 
   precheck:
     needs: gds

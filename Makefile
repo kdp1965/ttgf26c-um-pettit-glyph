@@ -12,6 +12,7 @@
 #     make screenshots              # docs/screenshots/*.png from the frames `make units` rendered
 #     make test                     # the chip bench at RTL, whole, with Verilator
 #     make gl RUN=runs/<TAG>        # the chip bench on the hardened netlist
+#     make promote RUN=runs/<TAG>   # local_build/ (what GitHub publishes) from a run
 NIX_SHELL ?= $(HOME)/projects/tiny_tapeout/librelane/shell.nix
 PDK_ROOT  ?= $(HOME)/projects/fossi
 PYTHON    ?= python3.12
@@ -29,7 +30,7 @@ endif
 TT_PY = export GIT_PYTHON_GIT_EXECUTABLE=\$$(which git); export PATH=\"\$$PATH:$(CURDIR)/.venv-tt/bin\"; .venv-tt/bin/python
 LIBRELANE = export PDK_ROOT=$(PDK_ROOT); python -m librelane --pdk-root $(PDK_ROOT) --pdk gf180mcuD
 
-.PHONY: art venv config harden synth units screenshots test gl gui klayout
+.PHONY: art venv config harden synth units screenshots test gl promote gui klayout
 
 venv:
 	$(PYTHON) -m venv .venv-tt
@@ -76,6 +77,15 @@ test:
 gl:
 	cp $(RUN)/final/pnl/*.pnl.v test/gate_level_netlist.v
 	cd test && PATH=$(COCOTB):$$PATH PDK_ROOT=$(PDK_ROOT) GATES=yes $(MAKE) -B
+
+# The views the gds workflow publishes (custom_gds): GDS, LEF, powered netlist.
+TOP = tt_um_pettit_glyph
+promote:
+	mkdir -p local_build/gds local_build/lef local_build/pnl
+	cp $(RUN)/final/gds/$(TOP).gds local_build/gds/
+	cp $(RUN)/final/lef/$(TOP).lef local_build/lef/
+	cp $(RUN)/final/pnl/$(TOP).pnl.v local_build/pnl/
+	cp $(RUN)/final/metrics.json local_build/
 
 gui:
 	$(RUN_SH) "openroad -gui -no_init -db $(firstword $(wildcard $(RUN)/final/odb/*.odb))"
