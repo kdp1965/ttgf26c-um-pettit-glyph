@@ -17,7 +17,7 @@ FRAME = H_TOTAL * V_TOTAL
 
 # ui_in levels
 DATE, MEDIUM, EASY = 0b0001_0000, 0b0010_0000, 0b0100_0000
-SET_COLOR, GRID = 0b0000_0100, 0b0000_1000
+SET_COLOR, GRID_OFF = 0b0000_0100, 0b0000_1000
 BTN_A, BTN_B = 0b0000_0001, 0b0000_0010
 
 BLACK, GRAY = (0, 0, 0), (1, 1, 1)
@@ -88,7 +88,7 @@ class Screen:
 async def start(dut):
     cocotb.start_soon(Clock(dut.clk, PERIOD_NS, unit="ns").start())
     dut.ena.value = 1
-    dut.ui_in.value = GRID
+    dut.ui_in.value = 0
     dut.uio_in.value = 0
     dut.rst_n.value = 0
     for _ in range(5):
@@ -144,8 +144,8 @@ async def test_face(dut):
             v.append(int(dut.uio_out.value) & 0xF)
         return (v[0] + 12 * v[1], 5 * v[2] + v[3], v[4] or 12, 5 * v[5] + v[6])
 
-    def ui(levels, grid=GRID):
-        dut.ui_in.value = levels | grid
+    def ui(levels):
+        dut.ui_in.value = levels
 
     async def press(buttons, held=0):
         """One press of the buttons in ui_in, the other inputs held."""
@@ -182,12 +182,17 @@ async def test_face(dut):
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
     assert got["a"] == YELLOW and got["o1"] != YELLOW, got
 
-    # With SET_COLOR, button B turns on the time in digits in the lower
-    # right, in whatever mode, and leaves the minutes alone.
+    # The time in digits in the lower right is on after reset, in whatever
+    # mode.  With SET_COLOR, button B turns it off and on again, and leaves
+    # the minutes alone.
+    x, y = COLON
+    got = await scr.frame({"dot": COLON, "gap": (x, y + 8)})
+    assert got == {"dot": YELLOW, "gap": BLACK}, got
+    await press(BTN_B, MEDIUM | SET_COLOR)
+    ui(MEDIUM)
     assert await scr.pixel(COLON) == BLACK
     await press(BTN_B, MEDIUM | SET_COLOR)
     ui(MEDIUM)
-    x, y = COLON
     got = await scr.frame({"dot": COLON, "gap": (x, y + 8), "o1": SPOKE_O1, "s1": STRIPE_1})
     assert got["dot"] == YELLOW and got["gap"] == BLACK, got
     assert YELLOW not in (got["o1"], got["s1"]), got
@@ -237,9 +242,9 @@ async def test_face(dut):
 
     assert await read() == (12, 2, 2, 5)
 
-    # Grid input low: the unlit segments go, the lit ones and the body stay.
+    # Grid off input high: the unlit segments go, the lit ones and the body stay.
     assert await scr.web(A_BOTTOM)
-    ui(DATE, grid=0)
+    ui(DATE | GRID_OFF)
     await scr.skip(2)
     x, y = A_BOTTOM
     got = await scr.frame({"w0": (x, y), "w1": (x + 1, y), "a": A_TOP, "body": BODY})

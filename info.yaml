@@ -28,7 +28,7 @@ pinout:
   ui[0]: "Hour+ / Month+ / Color+"
   ui[1]: "Minute+ / Day+ / Digits on-off"
   ui[2]: "Buttons set color and digits"
-  ui[3]: "Grid on"
+  ui[3]: "Grid off"
   ui[4]: "Show date"
   ui[5]: "Mode: medium"
   ui[6]: "Mode: easy"

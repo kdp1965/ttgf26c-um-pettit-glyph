@@ -5,6 +5,9 @@
  * Glyph: a VGA clock with the hexagonal "Glyph" watch face
  * (640x480 at 60 Hz, 25.175 MHz clock, Tiny VGA PMOD on uo_out).
  *
+ * Show numeric time / date
+ *    - Set ui[2] = 1
+ *      - ui[1] toggles the digits off and on (on after reset)
  * Set the time:
  *    - Set ui[2] = 0, ui[4] = 0
  *      - ui[0] increments / adds hours
@@ -16,15 +19,6 @@
  * Set the color
  *    - Set ui[2] = 1, ui[4] = 0
  *      - ui[0] cycles the face color
- * Read the clock back (to check what was set)
- *    - uio[6:4] selects, uio[3:0] is the value:
- *      0 hour (0..11, 0 is twelve)   1 PM (0 or 1)
- *      2 minutes / 5 (0..11)         3 minutes mod 5 (0..4)
- *      4 month (1..11, 0 is December) 5 day / 5 (0..6)
- *      6 day mod 5 (0..4)            7 seconds / 5 (0..11)
- * Show numeric time (or date, with ui[4] = 1)
- *    - Set ui[2] = 1
- *      - ui[1] turns the digits on and off (off after reset)
  */
 
 `default_nettype none
@@ -80,7 +74,7 @@ module tt_um_pettit_glyph (
 
   wire [1:0] btn = ui_s[1:0];
   wire       set_colour = ui_s[2];
-  wire       grid_on = ui_s[3];
+  wire       grid_on = !ui_s[3];
   wire       view_date = ui_s[4];
   wire [1:0] mode = ui_s[6:5];
   wire       fast = ui_s[7];
@@ -105,7 +99,7 @@ module tt_um_pettit_glyph (
     if (!rst_n) begin
       ui_s <= 8'd0;
       colour <= 3'd0;
-      digits <= 1'b0;
+      digits <= 1'b1;
       btn_prev <= 2'd0;
       view_prev <= 1'b0;
       hold <= 5'd0;

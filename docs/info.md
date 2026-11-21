@@ -1,10 +1,14 @@
 ## How it works
 
 Glyph is a clock and calendar on a VGA monitor (640x480 at 60 Hz) that tells
-the time the way the Tokyoflash "Glyph" concept watch does: with lit lines on
+the time using a "Glyph" cryptic format.  This was inspired by a watch
+design concept I saw on a "Tokyoflash" website in 2012.  It uses lit "LED" segments on
 a web of concentric hexagons instead of hands or digits.
 
 ![1:20 in hard, medium and easy mode](modes.png)
+
+The original concept page is here: 
+    https://blog.tokyoflash.com/2014/04/29/glyph-led-watch-looks-cryptic-is-actually-easy/
 
 ### Reading the face
 
@@ -39,8 +43,8 @@ The strap carries two bars: the **top bar is lit from noon to midnight** (PM),
 and the **bottom bar blinks** once a second.
 
 The time can also be written **in digits** in the lower right corner (12 hour,
-in a 3x5 font), for checking your reading in any mode. They are off after
-reset; button B while `ui[2]` is high turns them on and off. In the date view
+in a 3x5 font), for checking your reading in any mode. They are on after
+reset; button B while `ui[2]` is high turns them off and on. In the date view
 the digits are the date, month first: `7/23` is 23 July.
 
 ![12:38 with the digits on](screenshots/d_1238.png)
@@ -48,7 +52,8 @@ the digits are the date, month first: `7/23` is 23 July.
 A row of eleven **5-second ticks along the bottom of the face**, between the
 5 and 7 o'clock spokes, counts the seconds in fives: the first lights at 5
 seconds, the second at 10, and so on to 55, and all go out when the minute
-turns. Unlit ticks are dim with the grid on and invisible with it off.
+turns. Unlit ticks are dim with the grid on (`ui[3]` low) and invisible with
+it off.
 
 With **Show date** high the same face shows the date: the outer ring is the
 month (1 to 12) and the inner ring and stripes are the day, read like minutes
@@ -73,10 +78,12 @@ days.
 
 ### Chip art
 
-Calvin is drawn in Metal4 in the bottom left of the tile, between the first two
+While you can't see it, I put my "Calvin" avatar image in Metal4 in the bottom
+left of the tile, between the first two
 pairs of power stripes (30.0 x 36.5 um, 0.5 um pixels). The ten rows of
 standard cells under him are cut out and the router is kept off the patch on
-every layer, so there is nothing beneath the picture.
+every layer, so there is nothing beneath the picture.  At least it is visible
+in the 3D GDS Viewer that way.
 
 ![Calvin in Metal4](calvin.png)
 
@@ -90,7 +97,7 @@ reset the face draws on and shows 12:00 AM, 1 January.
 | `ui[0]` | Button A: Hour + in the time view, Month + in the date view; Color + while `ui[2]` is high |
 | `ui[1]` | Button B: Minute + in the time view (also zeroes the seconds), Day + in the date view; digits on/off while `ui[2]` is high |
 | `ui[2]` | The buttons set the display instead of the clock: A steps the LED color, B turns the digits on and off |
-| `ui[3]` | Grid on: high draws the unlit segments dimly; low shows only the lit ones and the watch body |
+| `ui[3]` | Grid off: low draws the unlit segments dimly; high shows only the lit ones and the watch body |
 | `ui[4]` | Show the date instead of the time |
 | `ui[6:5]` | Mode: 00 hard, 01 medium, 1x easy |
 | `ui[7]` | Fast: the clock runs 900 times faster, a minute every 4 frames |
@@ -140,11 +147,11 @@ to the last day of the new month, so set the month first.
 
 This works in either view and does not change the time or date.
 
-### How to enable the numeric display
+### How to turn the numeric display off and on
 
 1. Set `ui[2]` high.
 2. Press `ui[1]`. Each press turns the digits in the lower right corner on
-   or off. They are off after reset.
+   off or on. They are on after reset.
 3. Set `ui[2]` low again.
 
 The digits follow the view: the time as `12:38` (12 hour; the top strap bar
