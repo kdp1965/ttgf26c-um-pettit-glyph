@@ -38,7 +38,7 @@ module glyph_face (
     input  wire [1:0] mode,      // 0 hard, 1 medium, 2 or 3 easy
     input  wire [5:0] reveal,    // {group, index}: segments below this are shown
     input  wire       web_on,    // draw the unlit segments
-    input  wire [2:0] color,
+    input  wire [2:0] colour,
     input  wire       top_on,    // top strap bar lit
     input  wire       bot_on,    // bottom strap bar lit
     input  wire [3:0] secs5,     // seconds / 5, 0..11: that many ticks lit
@@ -332,7 +332,7 @@ module glyph_face (
 
   reg [5:0] cmax;
   always @(*) begin
-    case (color)
+    case (colour)
       3'd0: cmax = {2'd3, 2'd3, 2'd0};   // yellow
       3'd1: cmax = {2'd3, 2'd0, 2'd0};   // red
       3'd2: cmax = {2'd0, 2'd3, 2'd0};   // green

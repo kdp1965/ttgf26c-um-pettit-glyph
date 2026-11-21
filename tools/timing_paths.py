@@ -14,7 +14,7 @@ pnl = open(glob.glob(run + '/final/pnl/*.pnl.v')[0]).read()
 q = {}
 for m in re.finditer(r'gf180mcu_fd_sc_mcu7t5v0__dff\w+ (\S+) \((.*?)\);', pnl, re.S):
     qq = re.search(r'\.Q\(([^)]*)\)', m.group(2)); q[m.group(1)] = qq.group(1).strip().lstrip('\\') if qq else '?'
-FRAME = re.compile(r'^(hold|btn_prev|ui_s|btn|set_color|grid_on|view_date|mode|fast|face\.mode|color|digits|view_prev|fcnt|reveal|clock\.(h12|pm|m5|m1|mon|d5|d1|s5|s1))\b')
+FRAME = re.compile(r'^(hold|btn_prev|ui_s|btn|set_colou?r|grid_on|view_date|mode|fast|face\.mode|colou?r|digits|view_prev|fcnt|reveal|clock\.(h12|pm|m5|m1|mon|d5|d1|s5|s1))\b')
 rows = []
 for p in re.split(r'\nStartpoint: ', rpt)[1:]:
     s = p.split()[0]; e = re.search(r'Endpoint: (\S+)', p).group(1)

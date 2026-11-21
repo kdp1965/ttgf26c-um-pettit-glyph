@@ -70,7 +70,7 @@ module tt_um_pettit_glyph (
 
   // Sampled once per frame, which also debounces the buttons.
   reg [7:0] ui_s;
-  reg [2:0] color;
+  reg [2:0] colour;
   reg       digits;
   reg [1:0] btn_prev;
   reg       view_prev;
@@ -79,7 +79,7 @@ module tt_um_pettit_glyph (
   reg [5:0] reveal;
 
   wire [1:0] btn = ui_s[1:0];
-  wire       set_color = ui_s[2];
+  wire       set_colour = ui_s[2];
   wire       grid_on = ui_s[3];
   wire       view_date = ui_s[4];
   wire [1:0] mode = ui_s[6:5];
@@ -96,15 +96,15 @@ module tt_um_pettit_glyph (
   // The two buttons set what is on screen: hours and minutes in the time
   // view, month and day in the date view.  With set_color high the first
   // one steps the LED color and the second turns the digits on and off.
-  wire       btn_a = press[0] && !set_color;
-  wire       btn_b = press[1] && !set_color;
+  wire       btn_a = press[0] && !set_colour;
+  wire       btn_b = press[1] && !set_colour;
 
   wire       reveal_done = (reveal[5:3] == 3'd5);
 
   always @(posedge clk) begin
     if (!rst_n) begin
       ui_s <= 8'd0;
-      color <= 3'd0;
+      colour <= 3'd0;
       digits <= 1'b0;
       btn_prev <= 2'd0;
       view_prev <= 1'b0;
@@ -113,8 +113,8 @@ module tt_um_pettit_glyph (
       reveal <= 6'd0;
     end else if (frame_tick) begin
       ui_s <= ui_in;
-      if (press[0] && set_color) color <= color + 3'd1;
-      if (press[1] && set_color) digits <= ~digits;
+      if (press[0] && set_colour) colour <= colour + 3'd1;
+      if (press[1] && set_colour) digits <= ~digits;
       btn_prev <= btn;
       view_prev <= view_date;
       hold <= (btn == 2'd0 || both) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
@@ -180,7 +180,7 @@ module tt_um_pettit_glyph (
       .mode   (mode),
       .reveal (reveal),
       .web_on (grid_on),
-      .color (color),
+      .colour (colour),
       .top_on (pm),
       .bot_on (sec0),
       .secs5  (s5),
