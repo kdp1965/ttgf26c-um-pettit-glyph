@@ -5,7 +5,7 @@
  * glyph_face: pixel renderer for the "Glyph" hexagonal watch face.
  *
  * The face is drawn from three signed distances, all in quarter pixels,
- * measured from the screen centre (320, 240):
+ * measured from the screen center (320, 240):
  *
  *   a0 = y                      top / bottom edges,   3 and 9 o'clock spokes
  *   a1 = (sqrt3/2) x + y/2      4 / 10 o'clock edges, 1 and 7 o'clock spokes
@@ -34,11 +34,11 @@ module glyph_face (
     input  wire       active,
     input  wire [3:0] pos_o,     // outer ring (hours / month): position 0..11
     input  wire [3:0] pos_i,     // inner ring (5 minutes / 5 days): position 0..11
-    input  wire [2:0] singles,   // centre stripes lit, 0..4
+    input  wire [2:0] singles,   // center stripes lit, 0..4
     input  wire [1:0] mode,      // 0 hard, 1 medium, 2 or 3 easy
     input  wire [5:0] reveal,    // {group, index}: segments below this are shown
     input  wire       web_on,    // draw the unlit segments
-    input  wire [2:0] colour,
+    input  wire [2:0] color,
     input  wire       top_on,    // top strap bar lit
     input  wire       bot_on,    // bottom strap bar lit
     input  wire [3:0] secs5,     // seconds / 5, 0..11: that many ticks lit
@@ -55,7 +55,7 @@ module glyph_face (
   localparam [11:0] SPOKE_END = 12'd768;  // outer spoke tip:     192 px
   localparam [11:0] BODY_IN = 12'd792;  // watch body inner edge: 198 px
   localparam [11:0] BODY_OUT = 12'd872; // watch body outer edge: 218 px
-  localparam [11:0] LOGO = 12'd120;     // centre logo clip:       30 px
+  localparam [11:0] LOGO = 12'd120;     // center logo clip:       30 px
   localparam [12:0] SEG_GAP = 13'd6;    // inner spoke tip to hexagon: 1.5 px
 
   // (sqrt3/2) x as an accumulator with 8 fraction bits: 222/256 = 0.8672.
@@ -131,7 +131,7 @@ module glyph_face (
     end
   endfunction
 
-  // Colour scaled by coverage: round(max * cov / 3).
+  // Color scaled by coverage: round(max * cov / 3).
   function [1:0] scale(input [1:0] m, input [1:0] cv);
     begin
       case (m)
@@ -162,18 +162,18 @@ module glyph_face (
   wire near1 = (a1[12:5] == 8'h00) || (a1[12:5] == 8'hFF);
   wire near2 = (a2[12:5] == 8'h00) || (a2[12:5] == 8'hFF);
   wire [12:0] anear = near0 ? a0 : near1 ? a1 : a2;
-  // Distance from the spoke's centre line, 0..31 quarter pixels (31: not near).
+  // Distance from the spoke's center line, 0..31 quarter pixels (31: not near).
   wire [5:0] pfull = anear[5] ? (~anear[5:0] + 6'd1) : anear[5:0];
   wire [4:0] pabs_1 = ((near0 || near1 || near2) && !pfull[5]) ? pfull[4:0] : 5'd31;
   wire [2:0] spoke_k_1 = near0 ? (s1 ? 3'd4 : 3'd1) : near1 ? (s2 ? 3'd3 : 3'd0) : (s1 ? 3'd5 : 3'd2);
 
-  // |a2| near the centre, for the stripes.
+  // |a2| near the center, for the stripes.
   wire [7:0] e2_1 = a2[12] ? (~a2[7:0] + 8'd1) : a2[7:0];
 
   // ------------------------------------------------------- pipeline register
 
   // Everything above is the first clock of a pixel (distances, radius,
-  // sector); everything below is the second (bands, segments, colour).
+  // sector); everything below is the second (bands, segments, color).
   reg [11:0] d;
   reg [ 2:0] edge_j;
   reg [ 4:0] pabs;
@@ -189,7 +189,7 @@ module glyph_face (
   wire       bar_x = (hpos[9:3] == 7'd43);   // x = 344..351
 
   // The seconds: eleven ticks, 8 px wide every 16 px, in the bottom of the
-  // face between the 5 and 7 o'clock spokes.  Tick n (1..11) is centred on
+  // face between the 5 and 7 o'clock spokes.  Tick n (1..11) is centered on
   // x = 320 + 16 (n - 6), and is lit from second 5 n.
   wire [9:0] tick_u = hpos - 10'd220;
   wire       tick_1 = (tick_u[9:8] == 2'd0) && !tick_u[3] && (tick_u[7:4] != 4'd0) &&
@@ -275,7 +275,7 @@ module glyph_face (
   wire [1:0] cov_so = min2(cov_perp, inside_a ? cov_a : cov_tip);
 
   // An inner spoke is a separate segment, like one on an LCD: it stops
-  // SEG_GAP short of the hexagon's line at each end and is bevelled to a
+  // SEG_GAP short of the hexagon's line at each end and is beveled to a
   // point there.  d - pabs/2 is the distance along the spoke (d alone bends
   // round the corner), and the half width allowed at each end is the
   // distance from that end, which makes the point a little under 90 degrees.
@@ -290,9 +290,9 @@ module glyph_face (
   // off the top and bottom of the screen.
   wire body = (d >= BODY_IN) && ((d < BODY_OUT) || strap_x);
 
-  // ----------------------------------------------------------- centre stripes
+  // ----------------------------------------------------------- center stripes
 
-  // Four diagonal bars: bands in a2 centred on +-7 and +-21 px, clipped to a
+  // Four diagonal bars: bands in a2 centered on +-7 and +-21 px, clipped to a
   // small hexagon.  Stripe 1 is the rightmost.
   wire [7:0] e2 = e2_q;
   wire [1:0] cov_logo = rampcov({1'b0, LOGO} + 13'd2 - {1'b0, d});
@@ -320,7 +320,7 @@ module glyph_face (
   wire [1:0] cov_lit = max2(max2(lit_so ? cov_so : 2'd0, lit_a ? cov_a : 2'd0), max2(
       max2(lit_si ? cov_si : 2'd0, lit_b ? cov_b : 2'd0), (lit_t ? cov_t : 2'd0) | {2{lit_tick || txt}}));
 
-  // The unlit web: every segment, at half the body's grey (a checkerboard).
+  // The unlit web: every segment, at half the body's gray (a checkerboard).
   wire web = (cov_a[1] || cov_b[1] || cov_so[1] || cov_si[1] || cov_t[1] || tick) && dither && web_on;
 
   // ------------------------------------------------------------- strap bars
@@ -328,11 +328,11 @@ module glyph_face (
   wire bar = strap_top || strap_bot;
   wire bar_on = (strap_top && top_on) || (strap_bot && bot_on);
 
-  // ------------------------------------------------------------------ colour
+  // ------------------------------------------------------------------ color
 
   reg [5:0] cmax;
   always @(*) begin
-    case (colour)
+    case (color)
       3'd0: cmax = {2'd3, 2'd3, 2'd0};   // yellow
       3'd1: cmax = {2'd3, 2'd0, 2'd0};   // red
       3'd2: cmax = {2'd0, 2'd3, 2'd0};   // green

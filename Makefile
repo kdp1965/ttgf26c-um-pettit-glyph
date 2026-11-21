@@ -40,7 +40,7 @@ venv:
 # tile, and the keep-out cut under him: macros/CALVIN/.  The numbers are
 # repeated in src/config.json's ROUTING_OBSTRUCTIONS.
 art:
-	$(RUN_SH) "python3 tools/chip_art.py --image art/calvin.png --origin 25.765 103.27 --keepout 25.2 101.92 56.3 141.12 --out macros/CALVIN"
+	$(RUN_SH) "python3 tools/chip_art.py --image art/calvin.png --origin 25.765 5.27 --keepout 25.2 3.92 56.3 43.12 --out macros/CALVIN"
 
 # info.yaml + src/config.json -> src/user_config.json + src/config_merged.json
 config:

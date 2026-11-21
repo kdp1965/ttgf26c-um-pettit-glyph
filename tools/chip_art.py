@@ -2,8 +2,8 @@
 # Chip art for GF180: a 1 bit bitmap into a Metal4-only GDS cell, one square
 # of metal per white pixel, plus what the flow steps need to place it.
 #
-#   python3 tools/chip_art.py --image art/calvin.png --origin 25.765 103.27 \
-#       --keepout 25.2 101.92 56.3 141.12 --out macros/CALVIN
+#   python3 tools/chip_art.py --image art/calvin.png --origin 25.765 5.27 \
+#       --keepout 25.2 3.92 56.3 43.12 --out macros/CALVIN
 #
 # runs inside the LibreLane nix shell (PIL, klayout.db); `make art` does it.
 # Outputs in --out: <cell>.gds (Metal4 46/0, and the dummy-fill exclusion

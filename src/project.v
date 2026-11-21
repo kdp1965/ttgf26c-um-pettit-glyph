@@ -16,6 +16,12 @@
  * Set the color
  *    - Set ui[2] = 1, ui[4] = 0
  *      - ui[0] cycles the face color
+ * Read the clock back (to check what was set)
+ *    - uio[6:4] selects, uio[3:0] is the value:
+ *      0 hour (0..11, 0 is twelve)   1 PM (0 or 1)
+ *      2 minutes / 5 (0..11)         3 minutes mod 5 (0..4)
+ *      4 month (1..11, 0 is December) 5 day / 5 (0..6)
+ *      6 day mod 5 (0..4)            7 seconds / 5 (0..11)
  * Show numeric time (or date, with ui[4] = 1)
  *    - Set ui[2] = 1
  *      - ui[1] turns the digits on and off (off after reset)
@@ -64,7 +70,7 @@ module tt_um_pettit_glyph (
 
   // Sampled once per frame, which also debounces the buttons.
   reg [7:0] ui_s;
-  reg [2:0] colour;
+  reg [2:0] color;
   reg       digits;
   reg [1:0] btn_prev;
   reg       view_prev;
@@ -73,7 +79,7 @@ module tt_um_pettit_glyph (
   reg [5:0] reveal;
 
   wire [1:0] btn = ui_s[1:0];
-  wire       set_colour = ui_s[2];
+  wire       set_color = ui_s[2];
   wire       grid_on = ui_s[3];
   wire       view_date = ui_s[4];
   wire [1:0] mode = ui_s[6:5];
@@ -88,17 +94,17 @@ module tt_um_pettit_glyph (
   wire [1:0] press = (btn & (~btn_prev | {2{rep}})) & {2{!both}};
 
   // The two buttons set what is on screen: hours and minutes in the time
-  // view, month and day in the date view.  With set_colour high the first
-  // one steps the LED colour and the second turns the digits on and off.
-  wire       btn_a = press[0] && !set_colour;
-  wire       btn_b = press[1] && !set_colour;
+  // view, month and day in the date view.  With set_color high the first
+  // one steps the LED color and the second turns the digits on and off.
+  wire       btn_a = press[0] && !set_color;
+  wire       btn_b = press[1] && !set_color;
 
   wire       reveal_done = (reveal[5:3] == 3'd5);
 
   always @(posedge clk) begin
     if (!rst_n) begin
       ui_s <= 8'd0;
-      colour <= 3'd0;
+      color <= 3'd0;
       digits <= 1'b0;
       btn_prev <= 2'd0;
       view_prev <= 1'b0;
@@ -107,8 +113,8 @@ module tt_um_pettit_glyph (
       reveal <= 6'd0;
     end else if (frame_tick) begin
       ui_s <= ui_in;
-      if (press[0] && set_colour) colour <= colour + 3'd1;
-      if (press[1] && set_colour) digits <= ~digits;
+      if (press[0] && set_color) color <= color + 3'd1;
+      if (press[1] && set_color) digits <= ~digits;
       btn_prev <= btn;
       view_prev <= view_date;
       hold <= (btn == 2'd0 || both) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
@@ -174,7 +180,7 @@ module tt_um_pettit_glyph (
       .mode   (mode),
       .reveal (reveal),
       .web_on (grid_on),
-      .colour (colour),
+      .color (color),
       .top_on (pm),
       .bot_on (sec0),
       .secs5  (s5),
@@ -197,9 +203,29 @@ module tt_um_pettit_glyph (
 
   // Tiny VGA PMOD.
   assign uo_out  = {hsync_q, b[0], g[0], r[0], vsync_q, b[1], g[1], r[1]};
-  assign uio_out = 8'd0;
-  assign uio_oe  = 8'd0;
+  // Readback for a host that is setting the clock: uio[6:4] selects one of
+  // the stored numbers, which comes out on uio[3:0].  minute = 5 m5 + m1,
+  // day = 5 d5 + d1.
+  reg [2:0] rd_sel;
+  always @(posedge clk) rd_sel <= uio_in[6:4];
 
-  wire _unused = &{ena, uio_in, 1'b0};
+  reg [3:0] rd;
+  always @(*) begin
+    case (rd_sel)
+      3'd0: rd = h12;
+      3'd1: rd = {3'd0, pm};
+      3'd2: rd = m5;
+      3'd3: rd = {1'b0, m1};
+      3'd4: rd = mon;
+      3'd5: rd = {1'b0, d5};
+      3'd6: rd = {1'b0, d1};
+      default: rd = s5;
+    endcase
+  end
+
+  assign uio_out = {4'd0, rd};
+  assign uio_oe  = 8'h0F;
+
+  wire _unused = &{ena, uio_in[7], uio_in[3:0], 1'b0};
 
 endmodule

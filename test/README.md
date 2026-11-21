@@ -1,7 +1,7 @@
 # Testbench for the Glyph VGA clock
 
 [test.py](test.py) is the chip bench ([cocotb](https://docs.cocotb.org/en/stable/)): it checks the VGA sync timing, then
-probes pixels of the face while it presses the buttons and changes the mode, colour and view.
+probes pixels of the face while it presses the buttons and changes the mode, color and view.
 A frame is 420000 clocks, so with Icarus (and at gate level) it stops after the first 30 frames;
 with Verilator it runs to the end (`make -B SIM=verilator SIM_BUILD=sim_build/vl EXTRA_ARGS="-Wno-fatal --timing"`,
 or `make test` one directory up). The waveform dump is off unless you add `WAVES=1`.

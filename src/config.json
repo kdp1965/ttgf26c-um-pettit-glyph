@@ -10,7 +10,7 @@
   "//": "If you get stuck with this config, please open an issue or get in touch via the discord.",
 
   "//": "Chip art: Calvin in Metal4 (30.0 x 36.5 um, 0.5 um pixels) between the first and second pair of power",
-  "//": "stripes, its top 4 rows below the top row. librelane_plugin_glyph_art.py cuts the 10 rows under it",
+  "//": "stripes, on the bottom 10 rows (away from the pins at the top). librelane_plugin_glyph_art.py cuts those rows",
   "//": "(the keep-out in macros/CALVIN/art.json; no cells, taps, filler or Metal1 rails there) and merges the",
   "//": "art cell into the GDS; the obstructions keep the router off the patch on every layer. make art rebuilds it.",
   "meta": {
@@ -21,11 +21,15 @@
     }
   },
   "CHIP_ART_JSON": "dir::../macros/CALVIN/art.json",
+
+  "//": "The resizer otherwise buffers high fan-out nets and the inputs with dlyb_1 delay cells (5 ns each at the",
+  "//": "slow corner, and 3 times the area of a buf_1); without them it uses real buffers.",
+  "EXTRA_EXCLUDED_CELLS": ["gf180mcu_fd_sc_mcu7t5v0__dly*"],
   "ROUTING_OBSTRUCTIONS": [
-    "Metal1 25.2 102.6 56.3 140.4",
-    "Metal2 25.2 102.6 56.3 140.4",
-    "Metal3 25.2 102.6 56.3 140.4",
-    "Metal4 25.2 102.6 56.3 140.4"
+    "Metal1 25.2 4.6 56.3 42.4",
+    "Metal2 25.2 4.6 56.3 42.4",
+    "Metal3 25.2 4.6 56.3 42.4",
+    "Metal4 25.2 4.6 56.3 42.4"
   ],
 
   "//": "Here are some of the variables you may want to change:",

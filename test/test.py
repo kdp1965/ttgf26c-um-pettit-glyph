@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: © 2026 Ken Pettit
 # SPDX-License-Identifier: Apache-2.0
 """Chip bench for the Glyph VGA clock: sync timing, then pixels of the face
-probed at known places while the time, mode, colour and view are changed."""
+probed at known places while the time, mode, color and view are changed."""
 
 import os
 
@@ -17,13 +17,13 @@ FRAME = H_TOTAL * V_TOTAL
 
 # ui_in levels
 DATE, MEDIUM, EASY = 0b0001_0000, 0b0010_0000, 0b0100_0000
-SET_COLOUR, GRID = 0b0000_0100, 0b0000_1000
+SET_COLOR, GRID = 0b0000_0100, 0b0000_1000
 BTN_A, BTN_B = 0b0000_0001, 0b0000_0010
 
-BLACK, GREY = (0, 0, 0), (1, 1, 1)
+BLACK, GRAY = (0, 0, 0), (1, 1, 1)
 YELLOW, RED = (3, 3, 0), (3, 0, 0)
 
-# Probe points (x, y); the face is centred on (320, 240).
+# Probe points (x, y); the face is centered on (320, 240).
 BACKGROUND = (10, 240)
 BODY = (320, 240 - 208)
 STRAP = (300, 5)
@@ -37,7 +37,7 @@ SPOKE_O1 = (320 + 92, 240 - 160)
 SPOKE_O5 = (320 + 92, 240 + 160)
 SPOKE_I9 = (320 - 111, 240)  # inner spokes
 SPOKE_I5 = (320 + 55, 240 + 96)
-STRIPE_1 = (320 + 24, 240)   # centre stripes, rightmost first
+STRIPE_1 = (320 + 24, 240)   # center stripes, rightmost first
 STRIPE_2 = (320 + 8, 240)
 TICK_1 = (320 - 80, 240 + 181)   # seconds ticks: 5 s, 10 s, 30 s
 TICK_2 = (320 - 64, 240 + 181)
@@ -76,10 +76,10 @@ class Screen:
         return (await self.frame({"p": xy}))["p"]
 
     async def web(self, xy):
-        """An unlit segment is a checkerboard of grey and black."""
+        """An unlit segment is a checkerboard of gray and black."""
         x, y = xy
         got = await self.frame({"a": (x, y), "b": (x + 1, y)})
-        return sorted(got.values()) == [BLACK, GREY]
+        return sorted(got.values()) == [BLACK, GRAY]
 
     async def skip(self, frames):
         await self.goto(self.frame_now() + frames, 0, 0)
@@ -122,7 +122,7 @@ async def test_sync(dut):
     assert (int(dut.vga_r.value), int(dut.vga_g.value), int(dut.vga_b.value)) == BLACK
     await FallingEdge(dut.vga_vsync)
     assert get_sim_time("ns") - t_fall == FRAME * PERIOD_NS
-    assert int(dut.uio_oe.value) == 0
+    assert int(dut.uio_oe.value) == 0x0F   # uio[3:0] is the readback
 
 
 @cocotb.test()
@@ -130,9 +130,19 @@ async def test_face(dut):
     # A frame is 420000 clocks.  Verilator runs the whole test in a minute;
     # Icarus (the GitHub workflows, and every gate-level run) gets the first
     # 30 frames, which already cover reset, the draw-on, a button, the three
-    # modes and the colour.
+    # modes and the color.
     short = os.environ.get("GATES") == "yes" or cocotb.SIM_NAME.lower().startswith("icarus")
     scr = await start(dut)
+
+    async def read():
+        """The clock as the readback port gives it: (hour 0..23, minute,
+        month 1..12, day)."""
+        v = []
+        for sel in range(7):
+            dut.uio_in.value = sel << 4
+            await Timer(3 * PERIOD, unit="step")
+            v.append(int(dut.uio_out.value) & 0xF)
+        return (v[0] + 12 * v[1], 5 * v[2] + v[3], v[4] or 12, 5 * v[5] + v[6])
 
     def ui(levels, grid=GRID):
         dut.ui_in.value = levels | grid
@@ -146,7 +156,8 @@ async def test_face(dut):
 
     # Frame 0: nothing is drawn on yet, only the body and the unlit web.
     got = await scr.frame({"bg": BACKGROUND, "body": BODY, "strap": STRAP, "bar": BAR_TOP})
-    assert got == {"bg": BLACK, "body": GREY, "strap": GREY, "bar": BLACK}, got
+    assert got == {"bg": BLACK, "body": GRAY, "strap": GRAY, "bar": BLACK}, got
+    assert await read() == (0, 0, 1, 1)
     assert await scr.web(A_TOP)
 
     # The outer ring is drawn on by frame 16: 12:00, hard mode, yellow.
@@ -163,25 +174,27 @@ async def test_face(dut):
     assert got["o9"] == YELLOW and got["o5"] == YELLOW, got
     assert YELLOW not in (got["a"], got["o3"], got["o1"]), got
 
+    assert await read() == (1, 0, 1, 1)
+
     # Medium joins them round the large hexagon.
     ui(MEDIUM)
     await scr.skip(2)
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
     assert got["a"] == YELLOW and got["o1"] != YELLOW, got
 
-    # With SET_COLOUR, button B turns on the time in digits in the lower
+    # With SET_COLOR, button B turns on the time in digits in the lower
     # right, in whatever mode, and leaves the minutes alone.
     assert await scr.pixel(COLON) == BLACK
-    await press(BTN_B, MEDIUM | SET_COLOUR)
+    await press(BTN_B, MEDIUM | SET_COLOR)
     ui(MEDIUM)
     x, y = COLON
     got = await scr.frame({"dot": COLON, "gap": (x, y + 8), "o1": SPOKE_O1, "s1": STRIPE_1})
     assert got["dot"] == YELLOW and got["gap"] == BLACK, got
     assert YELLOW not in (got["o1"], got["s1"]), got
 
-    # Easy adds the spoke at 1.  With SET_COLOUR, button A steps the colour
+    # Easy adds the spoke at 1.  With SET_COLOR, button A steps the color
     # to red and leaves the hour alone.
-    await press(BTN_A, EASY | SET_COLOUR)
+    await press(BTN_A, EASY | SET_COLOR)
     ui(EASY)
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1, "o9": SPOKE_O9})
     assert got == {"a": RED, "o1": RED, "o9": RED}, got
@@ -200,6 +213,8 @@ async def test_face(dut):
     got = await scr.frame({"bar": BAR_TOP, "a": A_TOP, "b": B_TOP, "s1": STRIPE_1, "s2": STRIPE_2,
                            "o3": SPOKE_O3})
     assert all(v == RED for v in got.values()), got
+
+    assert await read() == (12, 2, 1, 1)
 
     # Date view: the face draws on again, then January (corner 1) and day 1.
     ui(DATE)
@@ -220,13 +235,15 @@ async def test_face(dut):
     got = await scr.frame({"a": A_TOP, "o9": SPOKE_O9, "i9": SPOKE_I9})
     assert got["a"] == RED and got["o9"] != RED and got["i9"] == RED, got
 
+    assert await read() == (12, 2, 2, 5)
+
     # Grid input low: the unlit segments go, the lit ones and the body stay.
     assert await scr.web(A_BOTTOM)
     ui(DATE, grid=0)
     await scr.skip(2)
     x, y = A_BOTTOM
     got = await scr.frame({"w0": (x, y), "w1": (x + 1, y), "a": A_TOP, "body": BODY})
-    assert got == {"w0": BLACK, "w1": BLACK, "a": RED, "body": GREY}, got
+    assert got == {"w0": BLACK, "w1": BLACK, "a": RED, "body": GRAY}, got
 
     # Back in the time view the buttons did not move the clock: still 12:02 PM.
     ui(EASY)
@@ -234,7 +251,7 @@ async def test_face(dut):
     got = await scr.frame({"bar": BAR_TOP, "a": A_TOP, "b": B_TOP, "s2": STRIPE_2, "o3": SPOKE_O3})
     assert all(v == RED for v in got.values()), got
 
-    # Both buttons together: the time goes back to 12:00 AM.  The colour is
+    # Both buttons together: the time goes back to 12:00 AM.  The color is
     # still red.
     await press(BTN_A | BTN_B, EASY)
     t_clear = scr.frame_now()
@@ -256,12 +273,14 @@ async def test_face(dut):
     assert got["o9"] == RED and got["o5"] == RED and got["b"] == RED and got["s1"] == RED, got
     assert RED not in (got["a"], got["i5"]), got
 
+    assert await read() == (0, 0, 1, 1)
+
     # Digits in the date view: a slash where the colon was.
     x, y = COLON
     got = await scr.frame({"slash": (x + 8, y - 8), "colon": COLON})
     assert got == {"slash": RED, "colon": BLACK}, got
-    # Button B with SET_COLOUR again turns them off, and does not move the day.
-    await press(BTN_B, DATE | SET_COLOUR)
+    # Button B with SET_COLOR again turns them off, and does not move the day.
+    await press(BTN_B, DATE | SET_COLOR)
     ui(DATE)
     got = await scr.frame({"slash": (x + 8, y - 8), "s1": STRIPE_1})
     assert got["slash"] == BLACK and got["s1"] == RED, got
