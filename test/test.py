@@ -169,13 +169,15 @@ async def test_face(dut):
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
     assert got["a"] == YELLOW and got["o1"] != YELLOW, got
 
-    # Both mode pins: easy, with the time in digits in the lower right.
+    # With SET_COLOUR, button B turns on the time in digits in the lower
+    # right, in whatever mode, and leaves the minutes alone.
     assert await scr.pixel(COLON) == BLACK
-    ui(MEDIUM | EASY)
-    await scr.skip(2)
+    await press(BTN_B, MEDIUM | SET_COLOUR)
+    ui(MEDIUM)
     x, y = COLON
-    got = await scr.frame({"dot": COLON, "gap": (x, y + 8), "o1": SPOKE_O1})
-    assert got == {"dot": YELLOW, "gap": BLACK, "o1": YELLOW}, got
+    got = await scr.frame({"dot": COLON, "gap": (x, y + 8), "o1": SPOKE_O1, "s1": STRIPE_1})
+    assert got["dot"] == YELLOW and got["gap"] == BLACK, got
+    assert YELLOW not in (got["o1"], got["s1"]), got
 
     # Easy adds the spoke at 1.  With SET_COLOUR, button A steps the colour
     # to red and leaves the hour alone.
@@ -255,11 +257,14 @@ async def test_face(dut):
     assert RED not in (got["a"], got["i5"]), got
 
     # Digits in the date view: a slash where the colon was.
-    ui(DATE | MEDIUM | EASY)
-    await scr.skip(2)
     x, y = COLON
     got = await scr.frame({"slash": (x + 8, y - 8), "colon": COLON})
     assert got == {"slash": RED, "colon": BLACK}, got
+    # Button B with SET_COLOUR again turns them off, and does not move the day.
+    await press(BTN_B, DATE | SET_COLOUR)
+    ui(DATE)
+    got = await scr.frame({"slash": (x + 8, y - 8), "s1": STRIPE_1})
+    assert got["slash"] == BLACK and got["s1"] == RED, got
 
     # The seconds ticks: the time was cleared at the last press of both in
     # the time view; five seconds (300 frames) after it the first tick lights.

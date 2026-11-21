@@ -38,9 +38,9 @@ The mode pins make the corner numbers easier:
 The strap carries two bars: the **top bar is lit from noon to midnight** (PM),
 and the **bottom bar blinks** once a second.
 
-With **both mode pins high** the face is in easy mode and the time is also
-written in digits in the lower right corner (12 hour, in a 3x5 font), for
-checking your reading. In the date view the digits are the date, month first:
+The time can also be written **in digits** in the lower right corner (12 hour,
+in a 3x5 font), for checking your reading in any mode. They are off after
+reset; button B while `ui[2]` is high turns them on and off. In the date view the digits are the date, month first:
 `7/23` is 23 July.
 
 ![12:38 with the digits on](screenshots/d_1238.png)
@@ -87,11 +87,11 @@ reset the face draws on and shows 12:00 AM, 1 January.
 | Pin | Function |
 |---|---|
 | `ui[0]` | Button A: Hour + in the time view, Month + in the date view; Colour + while `ui[2]` is high |
-| `ui[1]` | Button B: Minute + in the time view (also zeroes the seconds), Day + in the date view |
-| `ui[2]` | Button A steps the LED colour instead of the hour or month |
+| `ui[1]` | Button B: Minute + in the time view (also zeroes the seconds), Day + in the date view; digits on/off while `ui[2]` is high |
+| `ui[2]` | The buttons set the display instead of the clock: A steps the LED colour, B turns the digits on and off |
 | `ui[3]` | Grid on: high draws the unlit segments dimly; low shows only the lit ones and the watch body |
 | `ui[4]` | Show the date instead of the time |
-| `ui[6:5]` | Mode: 00 hard, 01 medium, 10 easy, 11 easy with the time (or date) in digits |
+| `ui[6:5]` | Mode: 00 hard, 01 medium, 1x easy |
 | `ui[7]` | Fast: the clock runs 900 times faster, a minute every 4 frames |
 
 The two buttons set whatever is on screen. A press advances its field by

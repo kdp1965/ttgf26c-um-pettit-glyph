@@ -17,7 +17,8 @@
  *    - Set ui[2] = 1, ui[4] = 0
  *      - ui[0] cycles the face color
  * Show numeric time (or date, with ui[4] = 1)
- *    - Set ui[5] = 1, ui[6] = 1
+ *    - Set ui[2] = 1
+ *      - ui[1] turns the digits on and off (off after reset)
  */
 
 `default_nettype none
@@ -64,6 +65,7 @@ module tt_um_pettit_glyph (
   // Sampled once per frame, which also debounces the buttons.
   reg [7:0] ui_s;
   reg [2:0] colour;
+  reg       digits;
   reg [1:0] btn_prev;
   reg       view_prev;
   reg [4:0] hold;
@@ -87,9 +89,9 @@ module tt_um_pettit_glyph (
 
   // The two buttons set what is on screen: hours and minutes in the time
   // view, month and day in the date view.  With set_colour high the first
-  // one steps the LED colour instead.
+  // one steps the LED colour and the second turns the digits on and off.
   wire       btn_a = press[0] && !set_colour;
-  wire       btn_b = press[1];
+  wire       btn_b = press[1] && !set_colour;
 
   wire       reveal_done = (reveal[5:3] == 3'd5);
 
@@ -97,6 +99,7 @@ module tt_um_pettit_glyph (
     if (!rst_n) begin
       ui_s <= 8'd0;
       colour <= 3'd0;
+      digits <= 1'b0;
       btn_prev <= 2'd0;
       view_prev <= 1'b0;
       hold <= 5'd0;
@@ -105,6 +108,7 @@ module tt_um_pettit_glyph (
     end else if (frame_tick) begin
       ui_s <= ui_in;
       if (press[0] && set_colour) colour <= colour + 3'd1;
+      if (press[1] && set_colour) digits <= ~digits;
       btn_prev <= btn;
       view_prev <= view_date;
       hold <= (btn == 2'd0 || both) ? 5'd0 : rep ? 5'd24 : hold + 5'd1;
@@ -174,7 +178,7 @@ module tt_um_pettit_glyph (
       .top_on (pm),
       .bot_on (sec0),
       .secs5  (s5),
-      .txt_on (mode == 2'd3),
+      .txt_on (digits),
       .txt_date(view_date),
       .r      (r),
       .g      (g),
