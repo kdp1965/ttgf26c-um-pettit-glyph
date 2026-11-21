@@ -42,6 +42,7 @@ STRIPE_2 = (320 + 8, 240)
 TICK_1 = (320 - 80, 240 + 181)   # seconds ticks: 5 s, 10 s, 30 s
 TICK_2 = (320 - 64, 240 + 181)
 TICK_6 = (320, 240 + 181)
+COLON = (480 + 9 * 8 + 4, 424 + 8 + 4)   # upper dot of the colon in the digits
 
 
 class Screen:
@@ -167,6 +168,14 @@ async def test_face(dut):
     await scr.skip(2)
     got = await scr.frame({"a": A_TOP, "o1": SPOKE_O1})
     assert got["a"] == CYAN and got["o1"] != CYAN, got
+
+    # Both mode pins: easy, with the time in digits in the lower right.
+    assert await scr.pixel(COLON) == BLACK
+    ui(MEDIUM | EASY)
+    await scr.skip(2)
+    x, y = COLON
+    got = await scr.frame({"dot": COLON, "gap": (x, y + 8), "o1": SPOKE_O1})
+    assert got == {"dot": CYAN, "gap": BLACK, "o1": CYAN}, got
 
     # Easy adds the spoke at 1.  With SET_COLOUR, button A steps the colour
     # to red and leaves the hour alone.

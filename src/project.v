@@ -160,6 +160,10 @@ module tt_um_pettit_glyph (
       .top_on (pm),
       .bot_on (sec0),
       .secs5  (s5),
+      .txt_on (mode == 2'd3),
+      .txt_h  (h12),
+      .txt_m5 (m5),
+      .txt_m1 (m1),
       .r      (r),
       .g      (g),
       .b      (b)

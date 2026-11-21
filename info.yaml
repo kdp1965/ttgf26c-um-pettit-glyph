@@ -30,8 +30,8 @@ pinout:
   ui[2]: "Button 0 sets color"
   ui[3]: "Grid on"
   ui[4]: "Show date"
-  ui[5]: "Mode: medium"
-  ui[6]: "Mode: easy"
+  ui[5]: "Mode: medium (with ui[6]: digits)"
+  ui[6]: "Mode: easy (with ui[5]: digits)"
   ui[7]: "Fast (demo)"
 
   # Outputs

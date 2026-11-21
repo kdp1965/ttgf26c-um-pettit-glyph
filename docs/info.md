@@ -38,6 +38,12 @@ The mode pins make the corner numbers easier:
 The strap carries two bars: the **top bar is lit from noon to midnight** (PM),
 and the **bottom bar blinks** once a second.
 
+With **both mode pins high** the face is in easy mode and the time is also
+written in digits in the lower right corner (12 hour, in a 3x5 font), for
+checking your reading. The digits always show the time, also in the date view.
+
+![12:38 with the digits on](screenshots/d_1238.png)
+
 A row of eleven **ticks at the bottom of the face**, between the 5 and 7
 o'clock spokes, counts the seconds in fives: the first lights at 5 seconds,
 the second at 10, and so on to 55; all go out when the minute turns.
@@ -84,7 +90,7 @@ reset the face draws on and shows 12:00 AM, 1 January.
 | `ui[2]` | Button A steps the LED colour instead of the hour or month |
 | `ui[3]` | Grid on: high draws the unlit segments dimly; low shows only the lit ones and the watch body |
 | `ui[4]` | Show the date instead of the time |
-| `ui[6:5]` | Mode: 00 hard, 01 medium, 1x easy |
+| `ui[6:5]` | Mode: 00 hard, 01 medium, 10 easy, 11 easy with the time in digits |
 | `ui[7]` | Fast: the clock runs 900 times faster, a minute every 4 frames |
 
 The two buttons set whatever is on screen. A press advances its field by

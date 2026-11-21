@@ -13,6 +13,9 @@ module tb_face;
   reg top_on, bot_on;
   reg web_on = 1;
   reg [3:0] secs5 = 0;
+  reg txt_on = 0;
+  reg [3:0] txt_h = 0, txt_m5 = 0;
+  reg [2:0] txt_m1 = 0;
   wire [1:0] r, g, b;
   wire active = (hpos < 640) && (vpos < 480);
   glyph_face dut (.*);
@@ -76,6 +79,12 @@ module tb_face;
     secs5 = 4; colour = 7; mode = 1; pos_o = 7; pos_i = 4; singles = 3; frame("out/m_date_0723.ppm");
     // The same with the unlit grid off.
     web_on = 0; frame("out/m_date_0723_nogrid.ppm");
+    // Easy with the time in digits: 10:44, 7:05, 12:38, 9:26.
+    web_on = 1; txt_on = 1; mode = 3;
+    colour = 4; secs5 = 11; pos_o = 10; pos_i = 8; singles = 4; txt_h = 10; txt_m5 = 8; txt_m1 = 4; frame("out/d_1044.ppm");
+    colour = 0; secs5 = 6; pos_o = 7; pos_i = 1; singles = 0; txt_h = 7; txt_m5 = 1; txt_m1 = 0; frame("out/d_0705.ppm");
+    colour = 5; secs5 = 2; pos_o = 0; pos_i = 7; singles = 3; txt_h = 0; txt_m5 = 7; txt_m1 = 3; frame("out/d_1238.ppm");
+    colour = 7; secs5 = 9; pos_o = 9; pos_i = 5; singles = 1; txt_h = 9; txt_m5 = 5; txt_m1 = 1; frame("out/d_0926.ppm");
     $finish;
   end
 endmodule
